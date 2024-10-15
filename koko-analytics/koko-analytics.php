@@ -3,14 +3,14 @@
 /*
 Plugin Name: Koko Analytics
 Plugin URI: https://www.kokoanalytics.com/#utm_source=wp-plugin&utm_medium=koko-analytics&utm_campaign=plugins-page
-Version: 1.3.14
+Version: 1.3.15
 Description: Privacy-friendly analytics for your WordPress site.
 Author: ibericode
 Author URI: https://www.ibericode.com/
 Author Email: support@kokoanalytics.com
 Text Domain: koko-analytics
-License: GPL-3.0
-License URI: https://www.gnu.org/licenses/gpl-3.0.txt
+License: GPL-3.0-or-later
+License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 Koko Analytics - website analytics plugin for WordPress
 
@@ -34,7 +34,7 @@ phpcs:disable PSR1.Files.SideEffects
 
 namespace KokoAnalytics;
 
-\define('KOKO_ANALYTICS_VERSION', '1.3.14');
+\define('KOKO_ANALYTICS_VERSION', '1.3.15');
 \define('KOKO_ANALYTICS_PLUGIN_FILE', __FILE__);
 \define('KOKO_ANALYTICS_PLUGIN_DIR', __DIR__);
 
