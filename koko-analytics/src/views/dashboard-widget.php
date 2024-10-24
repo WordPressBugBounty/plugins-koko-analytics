@@ -3,13 +3,15 @@
 /**
 * @var int $number_of_top_items
 * @var int $realtime
+* @var array $chart_data
 * @var array $posts
 * @var array $referrers
 * @var stdClass $totals
-* @var $dateStart*
-*
+* @var \DateTimeInterface $dateStart
+* @var \DateTimeInterface $dateEnd
 */
 
+use KokoAnalytics\Chart_View;
 ?>
 <link rel="stylesheet" href="<?php echo plugins_url('assets/dist/css/dashboard.css', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>">
 <script src="<?php echo plugins_url('assets/dist/js/dashboard-widget.js', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>" defer></script>
@@ -21,14 +23,11 @@
     </p>
 </div>
 
-<div id="ka-dashboard-widget-chart" style="display: none; margin-top: 2em;">
+<div id="ka-dashboard-widget-chart" style="margin-top: 2em;">
     <h3>
        <?php echo esc_html__('Showing site visits over last 14 days', 'koko-analytics'); ?>
     </h3>
-    <div id="koko-analytics-dashboard-widget-mount">
-        Please wait, your chart is loading. <br />
-        If nothing shows up, check your browser console for any error messages.
-    </div>
+    <?php new Chart_View($chart_data, $dateStart, $dateEnd, 200); ?>
 </div>
 
 <?php if ($number_of_top_items > 0 && (count($posts) > 0 || count($referrers) > 0)) { ?>
@@ -50,7 +49,6 @@
         <?php } // end if count posts ?>
         <?php if (count($referrers) > 0) { ?>
         <div>
-
             <h3>
             <?php echo esc_html__('Today\'s top referrers', 'koko-analytics'); ?>
             </h3>
@@ -72,7 +70,3 @@
         <?php echo esc_html__('View all statistics', 'koko-analytics'); ?>
     </a>
 </p>
-
-<script>
-var koko_analytics = <?php echo json_encode($this->get_script_data()); ?>;
-</script>

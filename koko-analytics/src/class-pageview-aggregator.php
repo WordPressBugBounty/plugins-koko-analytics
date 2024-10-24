@@ -57,20 +57,24 @@ class Pageview_Aggregator
         }
 
         // increment referrals
-        if ($this->is_valid_url($referrer_url)) {
+        if ($referrer_url !== '') {
             $referrer_url = $this->clean_url($referrer_url);
             $referrer_url = $this->normalize_url($referrer_url);
 
-            if (! isset($this->referrer_stats[ $referrer_url ])) {
-                $this->referrer_stats[ $referrer_url ] = array(
-                    'pageviews' => 0,
-                    'visitors'  => 0,
-                );
-            }
+            if ($this->is_valid_url($referrer_url)) {
+                // add to map
+                if (! isset($this->referrer_stats[ $referrer_url ])) {
+                    $this->referrer_stats[ $referrer_url ] = array(
+                        'pageviews' => 0,
+                        'visitors'  => 0,
+                    );
+                }
 
-            $this->referrer_stats[ $referrer_url ]['pageviews'] += 1;
-            if ($new_visitor) {
-                $this->referrer_stats[ $referrer_url ]['visitors'] += 1;
+                // increment stats
+                $this->referrer_stats[ $referrer_url ]['pageviews'] += 1;
+                if ($new_visitor) {
+                    $this->referrer_stats[ $referrer_url ]['visitors'] += 1;
+                }
             }
         }
     }
@@ -196,6 +200,10 @@ class Pageview_Aggregator
 
     public function clean_url(string $url)
     {
+        if ($url === '') {
+            return $url;
+        }
+
         // remove # from URL
         $pos = strpos($url, '#');
         if ($pos !== false) {
@@ -220,19 +228,28 @@ class Pageview_Aggregator
             $url = rtrim($new_url, '?');
         }
 
-        // trim trailing slash
-        return rtrim($url, '/');
+      // trim trailing slash if URL has no path component
+        $path = parse_url($url, PHP_URL_PATH);
+        if ($path === '' || $path === '/') {
+            return rtrim($url, '/');
+        }
+
+        return $url;
     }
 
     public function normalize_url(string $url)
     {
+        if ($url === '') {
+            return $url;
+        }
+
         // if URL has no protocol, assume HTTP
         // we change this to HTTPS for sites that are known to support it
         if (strpos($url, '://') === false) {
             $url = 'http://' . $url;
         }
 
-        $aggregations = array(
+        static $aggregations = array(
             '/^android-app:\/\/com\.(www\.)?google\.android\.googlequicksearchbox(\/.+)?$/' => 'https://www.google.com',
             '/^android-app:\/\/com\.www\.google\.android\.gm$/' => 'https://www.google.com',
             '/^https?:\/\/(?:www\.)?(google|bing|ecosia)\.([a-z]{2,3}(?:\.[a-z]{2,3})?)(?:\/search|\/url)?/' => 'https://www.$1.$2',
@@ -240,16 +257,16 @@ class Pageview_Aggregator
             '/^https?:\/\/(?:[a-z-]+)?\.?l?facebook\.com(?:\/l\.php)?/' => 'https://facebook.com',
             '/^https?:\/\/(?:[a-z-]+)?\.?l?instagram\.com(?:\/l\.php)?/' => 'https://www.instagram.com',
             '/^https?:\/\/(?:www\.)?linkedin\.com\/feed.*/' => 'https://www.linkedin.com',
-            '/^https?:\/\/(?:www\.)?pinterest\.com\//' => 'https://pinterest.com/',
+            '/^https?:\/\/(?:www\.)?pinterest\.com/' => 'https://pinterest.com',
             '/(?:www|m)\.baidu\.com.*/' => 'www.baidu.com',
-            '/yandex\.ru\/clck.*/' => 'yandex.ru',
+            '/^https?:\/\/yandex\.ru\/clck.*/' => 'https://yandex.ru',
+            '/^https?:\/\/yandex\.ru\/search/' => 'https://yandex.ru',
             '/^https?:\/\/(?:[a-z-]+)?\.?search\.yahoo\.com\/(?:search)?[^?]*(.*)/' => 'https://search.yahoo.com/search$1',
             '/^https?:\/\/(out|new|old)\.reddit\.com(.*)/' => 'https://reddit.com$2',
             '/^https?:\/\/(?:[a-z0-9]+\.?)*\.sendib(?:m|t)[0-9].com(?:.*)/' => 'https://www.brevo.com',
         );
 
         $aggregations = apply_filters('koko_analytics_url_aggregations', $aggregations);
-
         return preg_replace(array_keys($aggregations), array_values($aggregations), $url, 1);
     }
 

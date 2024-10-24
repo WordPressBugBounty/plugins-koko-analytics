@@ -1,5 +1,18 @@
 # Changelog
 
+#### 1.4.0 - Oct 24, 2024
+
+- All HTML for the dashboard is now server-side generated, drastically reducing the amount of JavaScript and generally making the code base easier to maintain and/or extend.
+- All dashboard state can now be managed through URL query parameters, allowing you to bookmark or share your favorite views.
+- Use actual `<table>` elements for dashboard tables, for improved screen reader support.
+- Add filter hook `koko_analytics_referrer_url_href` to modify link `href` attribute for referrer URL's in dashboard.
+- Add filter hook `koko_analytics_referrer_url_label` to modify link labels for referrer URL's in dashboard.
+- Fix admin user not getting `view_koko_analytics` capability upon plugin activation.
+- Prevent empty referrer URL from being stored.
+- Group various Yandex referrer URL's into a single entry.
+- Minor memory usage improvements in autoloader implementation.
+
+
 #### 1.3.15 - Oct 15, 2024
 
 - Fix `href` attribute on hyperlinks in most viewed posts widget/shortcode/function template.

@@ -309,7 +309,7 @@ function test_custom_endpoint(): void
     $endpoint_installer->verify();
 }
 
-function create_local_datetime($timestr): \DateTimeImmutable
+function create_local_datetime($timestr): ?\DateTimeImmutable
 {
     $offset = (float) get_option('gmt_offset', 0.0);
     if ($offset >= 0.00) {
@@ -321,5 +321,32 @@ function create_local_datetime($timestr): \DateTimeImmutable
         $now_local = $now_local->modify($offset . ' hours');
     }
 
-    return $now_local->modify($timestr);
+    $dt_local = $now_local->modify($timestr);
+    if (! $dt_local) {
+        return null;
+    }
+
+    return $dt_local;
+}
+
+function get_referrer_url_href(string $url): string
+{
+    if (strpos($url, '://t.co/') !== false) {
+        return 'https://twitter.com/search?q=' + urlencode($url);
+    } elseif (strpos($url, 'android-app://') === 0) {
+        return str_replace($url, 'android-app://', 'https://play.google.com/store/apps/details?id=');
+    }
+
+    return apply_filters('koko_analytics_referrer_url_href', $url);
+}
+
+function get_referrer_url_label(string $url): string
+{
+    $url = preg_replace('/^https?:\/\/(www\.)?(.+?)\/?$/', '$2', $url);
+
+    if (strpos($url, 'android-app://') === 0) {
+        return str_replace($url, 'android-app://', 'Android app: ');
+    }
+
+    return apply_filters('koko_analytics_referrer_url_label', $url);
 }
