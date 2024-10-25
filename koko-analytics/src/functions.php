@@ -73,7 +73,7 @@ function extract_event_data(): array
 function collect_request()
 {
     // ignore requests from bots, crawlers and link previews
-    if (empty($_SERVER['HTTP_USER_AGENT']) || preg_match("/bot|crawl|spider|seo|lighthouse|facebookexternalhit|preview/i", $_SERVER['HTTP_USER_AGENT'])) {
+    if (empty($_SERVER['HTTP_USER_AGENT']) || \preg_match("/bot|crawl|spider|seo|lighthouse|facebookexternalhit|preview/i", $_SERVER['HTTP_USER_AGENT'])) {
         return;
     }
 
@@ -332,7 +332,7 @@ function create_local_datetime($timestr): ?\DateTimeImmutable
 function get_referrer_url_href(string $url): string
 {
     if (strpos($url, '://t.co/') !== false) {
-        return 'https://twitter.com/search?q=' + urlencode($url);
+        return 'https://twitter.com/search?q=' . urlencode($url);
     } elseif (strpos($url, 'android-app://') === 0) {
         return str_replace($url, 'android-app://', 'https://play.google.com/store/apps/details?id=');
     }
@@ -343,8 +343,9 @@ function get_referrer_url_href(string $url): string
 function get_referrer_url_label(string $url): string
 {
     // strip protocol and www. prefix
-    $url = preg_replace('/^https?:\/\/(www\.)?(.+?)\/?$/', '$2', $url);
+    $url = (string) preg_replace('/^https?:\/\/(www\.)?(.+?)\/?$/', '$2', $url);
 
+    // if link starts with android-app://, turn that prefix into something more human readable
     if (strpos($url, 'android-app://') === 0) {
         return str_replace($url, 'android-app://', 'Android app: ');
     }
