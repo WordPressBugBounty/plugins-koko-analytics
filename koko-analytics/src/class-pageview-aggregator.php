@@ -57,24 +57,22 @@ class Pageview_Aggregator
         }
 
         // increment referrals
-        if ($referrer_url !== '') {
+        if ($referrer_url !== '' && $this->is_valid_url($referrer_url)) {
             $referrer_url = $this->clean_url($referrer_url);
             $referrer_url = $this->normalize_url($referrer_url);
 
-            if ($this->is_valid_url($referrer_url)) {
-                // add to map
-                if (! isset($this->referrer_stats[ $referrer_url ])) {
-                    $this->referrer_stats[ $referrer_url ] = array(
-                        'pageviews' => 0,
-                        'visitors'  => 0,
-                    );
-                }
+            // add to map
+            if (! isset($this->referrer_stats[ $referrer_url ])) {
+                $this->referrer_stats[ $referrer_url ] = array(
+                    'pageviews' => 0,
+                    'visitors'  => 0,
+                );
+            }
 
-                // increment stats
-                $this->referrer_stats[ $referrer_url ]['pageviews'] += 1;
-                if ($new_visitor) {
-                    $this->referrer_stats[ $referrer_url ]['visitors'] += 1;
-                }
+            // increment stats
+            $this->referrer_stats[ $referrer_url ]['pageviews'] += 1;
+            if ($new_visitor) {
+                $this->referrer_stats[ $referrer_url ]['visitors'] += 1;
             }
         }
     }
@@ -176,26 +174,40 @@ class Pageview_Aggregator
 
     private function ignore_referrer_url(string $url): bool
     {
-        // read blocklist into array
-        static $blocklist = null;
-        if ($blocklist === null) {
-            $blocklist = file(KOKO_ANALYTICS_PLUGIN_DIR . '/data/referrer-blocklist', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $url = strtolower($url);
 
-            // add result of filter hook to blocklist so user can provide custom domains to block through simple array
-            // @see https://github.com/ibericode/koko-analytics/blob/master/code-snippets/add-domains-to-referrer-blocklist.php
-            $custom_blocklist = apply_filters('koko_analytics_referrer_blocklist', array());
-            $blocklist        = array_merge($blocklist, $custom_blocklist);
-        }
-
-        foreach ($blocklist as $blocklisted_domain) {
-            if (false !== stripos($url, $blocklisted_domain)) {
+        // run custom blocklist first
+        // @see https://github.com/ibericode/koko-analytics/blob/master/code-snippets/add-domains-to-referrer-blocklist.php
+        $custom_blocklist = apply_filters('koko_analytics_referrer_blocklist', array());
+        foreach ($custom_blocklist as $blocklisted_domain) {
+            if (false !== strpos($url, $blocklisted_domain)) {
                 return true;
             }
         }
 
+        // read built-in blocklist file line-by-line to prevent OOM errors
+        $fh = fopen(KOKO_ANALYTICS_PLUGIN_DIR . '/data/referrer-blocklist', "r");
+        if ($fh) {
+            while (($blocklisted_domain = fgets($fh)) !== false) {
+                // trim newline and other whitespace
+                $blocklisted_domain = rtrim($blocklisted_domain);
+                if ($blocklisted_domain === '') {
+                    continue;
+                }
+
+                // simply check if domain is in referrer string
+                if (false !== strpos($url, $blocklisted_domain)) {
+                    fclose($fh);
+                    return true;
+                }
+            }
+
+            fclose($fh);
+        }
+
         // run return value through filter so user can apply more advanced logic to determine whether to ignore referrer  url
         // @see https://github.com/ibericode/koko-analytics/blob/master/code-snippets/ignore-some-referrer-traffic-using-regex.php
-        return (bool) apply_filters('koko_analytics_ignore_referrer_url', false, $url);
+        return apply_filters('koko_analytics_ignore_referrer_url', false, $url);
     }
 
     public function clean_url(string $url): string
@@ -228,7 +240,13 @@ class Pageview_Aggregator
             $url = rtrim($new_url, '?');
         }
 
-      // trim trailing slash if URL has no path component
+        // limit URL to 255 chars
+        // TODO: Maybe limit to just host and TLD?
+        if (strlen($url) > 255) {
+            $url = substr($url, 0, 255);
+        }
+
+        // trim trailing slash if URL has no path component
         $path = parse_url($url, PHP_URL_PATH);
         if ($path === '' || $path === '/') {
             return rtrim($url, '/');
@@ -250,26 +268,26 @@ class Pageview_Aggregator
         }
 
         static $aggregations = array(
-            '/^android-app:\/\/com\.(www\.)?google\.android\.googlequicksearchbox(\/.+)?$/' => 'https://www.google.com',
+            '/^android-app:\/\/com\.(www\.)?google\.android\.googlequicksearchbox.*/' => 'https://www.google.com',
             '/^android-app:\/\/com\.www\.google\.android\.gm$/' => 'https://www.google.com',
-            '/^https?:\/\/(?:www\.)?(google|bing|ecosia)\.([a-z]{2,3}(?:\.[a-z]{2,3})?)(?:\/search|\/url)?/' => 'https://www.$1.$2',
+            '/^https?:\/\/(?:www\.)?(google|bing|ecosia)\.([a-z]{2,4}(?:\.[a-z]{2,4})?)(?:\/search|\/url)?/' => 'https://www.$1.$2',
             '/^android-app:\/\/com\.facebook\.(.+)/' => 'https://facebook.com',
-            '/^https?:\/\/(?:[a-z-]+)?\.?l?facebook\.com(?:\/l\.php)?/' => 'https://facebook.com',
-            '/^https?:\/\/(?:[a-z-]+)?\.?l?instagram\.com(?:\/l\.php)?/' => 'https://www.instagram.com',
+            '/^https?:\/\/(?:[a-z-]{1,32}\.)?l?facebook\.com(?:\/l\.php)?/' => 'https://facebook.com',
+            '/^https?:\/\/(?:[a-z-]{1,32}\.)?l?instagram\.com(?:\/l\.php)?/' => 'https://www.instagram.com',
             '/^https?:\/\/(?:www\.)?linkedin\.com\/feed.*/' => 'https://www.linkedin.com',
             '/^https?:\/\/(?:www\.)?pinterest\.com/' => 'https://pinterest.com',
             '/^https?:\/\/(?:www|m)\.baidu\.com.*/' => 'https://www.baidu.com',
             '/^https?:\/\/yandex\.ru\/clck.*/' => 'https://yandex.ru',
             '/^https?:\/\/yandex\.ru\/search/' => 'https://yandex.ru',
-            '/^https?:\/\/(?:[a-z-]+)?\.?search\.yahoo\.com\/(?:search)?[^?]*(.*)/' => 'https://search.yahoo.com/search$1',
+            '/^https?:\/\/(?:[a-z-]{1,32}\.)?search\.yahoo\.com\/(?:search)?[^?]*(.*)/' => 'https://search.yahoo.com/search$1',
             '/^https?:\/\/(out|new|old)\.reddit\.com(.*)/' => 'https://reddit.com$2',
-            '/^https?:\/\/(?:[a-z0-9]+\.?)*\.sendib(?:m|t)[0-9].com(?:.*)/' => 'https://www.brevo.com',
+            '/^https?:\/\/(?:[a-z0-9]{1,8}\.)+sendib(?:m|t)[0-9]\.com.*/' => 'https://www.brevo.com',
         );
 
         $aggregations = apply_filters('koko_analytics_url_aggregations', $aggregations);
         $normalized_url = (string) preg_replace(array_keys($aggregations), array_values($aggregations), $url, 1);
         if (preg_last_error() !== PREG_NO_ERROR) {
-            error_log("Koko Analytics: preg_replace error in Pageview_Aggregator::normalize_url: " . preg_last_error_msg());
+            error_log("Koko Analytics: preg_replace error in Pageview_Aggregator::normalize_url('$url'): " . preg_last_error_msg());
             return $url;
         }
 
@@ -278,9 +296,11 @@ class Pageview_Aggregator
 
     public function is_valid_url(string $url): bool
     {
-        if ($url === '' || strlen($url) < 4) {
+        // shortest possible valid url: '://a.co'
+        if ($url === '' || strlen($url) < 7 || strpos($url, '://') === false) {
             return false;
         }
+
 
         return (bool) filter_var($url, FILTER_VALIDATE_URL);
     }

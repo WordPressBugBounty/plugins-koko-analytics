@@ -88,6 +88,7 @@ h1.ka-logo,
 .ka-dashboard-nav--left {
   display: flex;
   gap: 12px;
+  flex-flow: row wrap;
 }
 @media (min-width: 840px) {
   .ka-dashboard-nav {
@@ -100,6 +101,7 @@ h1.ka-logo,
 .ka-admin-nav ul {
   list-style: none;
   margin: 0;
+  padding: 0;
 }
 .ka-dashboard-nav li {
   line-height: 34px;
@@ -208,8 +210,11 @@ h1.ka-logo,
 .ka-page-filter--close:focus {
   opacity: 1;
 }
-.ka-dashboard-components.page-filter-active  {
-  opacity: 0.4;
+.page-filter-active tr  {
+  opacity: 0.5;
+}
+.page-filter-active tr.page-filter-active  {
+  opacity: 1;
 }
 
 /** Tabular components */
@@ -218,34 +223,29 @@ h1.ka-logo,
   width: 100%;
   border-spacing: 0;
 }
-.ka-table th {
-  text-align: left;
-  background: #2e363f;
-  color: white;
-}
-.ka-table th:first-of-type {
-  border-radius: 4px 0 0 0;
-}
-.ka-table th:nth-child(2) {
-  min-width: 60%;
-}
-.ka-table th:last-of-type {
-  border-radius: 0 4px 0 0;
-}
 .ka-table td,
 .ka-table th {
   border-top: 1px solid #efefef;
   text-align: right;
   padding: 6px 8px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 100px;
+  width: 60px;
+}
+.ka-table th {
+  background: #2e363f;
+  border-color: #2e363f;
+  color: white;
+}
+/* fix borders for table header */
+.ka-table th:first-of-type {
+  border-radius: 4px 0 0 0;
+}
+.ka-table th:last-of-type {
+  border-radius: 0 4px 0 0;
 }
 /* rank column */
 .ka-table th:first-child,
 .ka-table td:first-child {
-  width: 12px;
+  width: 18px;
 }
 /* page title / referrer url / event param column */
 .ka-table td[colspan],
@@ -253,6 +253,9 @@ h1.ka-logo,
 .ka-table th:nth-child(2) {
   text-align: left;
   width: auto;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* Pagination component */
@@ -312,17 +315,7 @@ h1.ka-logo,
 .ka-totals--subtext {
   color: #DDD;
 }
-.ka-totals--subtext-down {
-  display: none;
-}
-.ka-up .ka-totals--subtext-up,
-.ka-down .ka-totals--subtext-down {
-  display: inline;
-}
-.ka-down .ka-totals--subtext-up,
-.ka-up .ka-totals--subtext-down {
-  display: none;
-}
+
 
 /** Datepicker component */
 .ka-datepicker--label {
@@ -429,6 +422,7 @@ a.ka-datepicker--quicknav-next {
 .ka-ul span {
   min-width: 24px;
   display: inline-block;
+  text-align: right;
 }
 .ka-margin-s {
   margin: 1em 0;

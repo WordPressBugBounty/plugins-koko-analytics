@@ -3,8 +3,8 @@ Contributors: Ibericode, DvanKooten
 Donate link: https://wordpress.org/support/plugin/koko-analytics/reviews/#new-post
 Tags: analytics, statistics, stats, privacy, counter
 Requires at least: 6.0
-Tested up to: 6.6
-Stable tag: 1.4.2
+Tested up to: 6.7
+Stable tag: 1.4.3
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.3
@@ -44,6 +44,7 @@ The following features are available through [Koko Analytics Pro](https://www.ko
 
 - **Event Tracking**: Built-in events like outbound link clicks, form submissions plus the ability to [track any type of custom event](https://www.kokoanalytics.com/kb/tracking-events/).
 - **Email reports**: Daily, weekly or monthly [email reports](https://www.kokoanalytics.com/2024/08/21/setting-up-email-reports-with-koko-analytics-pro/).
+- **Export to CSV**: Exports the current dashboard view to CSV.
 
 
 ### Contributing
@@ -125,21 +126,33 @@ You can [purchase Koko Analytics Pro](https://www.kokoanalytics.com/pricing/) to
 == Screenshots ==
 
 1. Koko Analytics' dashboard to view your website statistics.
-2. The settings page where you can exclude certain user roles from being counted.
+2. The dashboard widget to quickly show your site visits over the last 2 weeks.
 3. A widget to show your most viewed posts (or any other post type) for a given period.
-4. The dashboard widget to quickly show your site visits over the last 2 weeks.
+4. The settings page where you can exclude certain user roles from being counted.
+5. Screenshot of settings page showing some features from Koko Analytics Pro.
 
 
 == Changelog ==
 
 
-#### 1.4.2 - Oct 25, 2025
+#### 1.4.3 - Oct 29, 2024
+
+- Fix "backtrack limit exhausted" triggering for certain referrer URL's without a subdomain part.
+- Fix totals component always showing "more than" for relative visitor and pageviews change.
+- Gracefully handle missing referrer blocklist file. This fixes an issue when security software on the server flags the blocklist file as suspicious (due to it containing a list of known malware domains) and deleting it.
+- Increase width of first table column so rank isn't showing ellipsis.
+- Remove light grey border on table header row.
+- Right align numbers in dashboard widget. Thanks [Terence Eden](https://shkspr.mobi/blog/), who also did a wonderful post on [liberating your website statistics from Jetpack](https://shkspr.mobi/blog/2024/10/liberate-your-daily-statistics-from-jetpack/)!
+- Improved validation of referrer URL's and request parameters at data collection endpoint.
+
+
+#### 1.4.2 - Oct 25, 2024
 
 - Fix fatal error "invalid string operand" when referrer URL contains `t.co` shortlink.
 - Fix potential issue with `preg_match` returning incorrect type in function `get_referrer_url_label`
 
 
-#### 1.4.1 - Oct 25, 2025
+#### 1.4.1 - Oct 25, 2024
 
 - Limit width of visitors and pageviews column in tables.
 - Fix `preg_replace` from returning an invalid type when an error occurs and the log the actual error that occurred.

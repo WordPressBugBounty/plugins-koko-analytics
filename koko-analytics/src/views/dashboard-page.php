@@ -92,7 +92,6 @@ use function KokoAnalytics\get_referrer_url_label;
 
         <?php require __DIR__ . '/nav.php'; ?>
     </div>
-
     <table id="ka-totals" class='ka-totals m'>
         <tbody>
         <tr class="<?php echo $totals->visitors_change > 0 ? 'ka-up' : ''; ?> <?php echo $totals->visitors_change < 0 ? 'ka-down' : ''; ?>">
@@ -100,13 +99,19 @@ use function KokoAnalytics\get_referrer_url_label;
             <td class='ka-totals--amount'>
                 <span title="<?php echo esc_attr($totals->visitors); ?>"><?php echo fmt_large_number($totals->visitors); ?></span>
                 <span class="ka-totals--change">
-                    <?php echo $totals->visitors_change_rel !== null ? sprintf('%+.0f%%', $totals->visitors_change_rel * 100) : ''; ?>
+                    <?php echo $totals->visitors_change_rel ? sprintf('%+.0f%%', $totals->visitors_change_rel * 100) : ''; ?>
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <span><?php echo fmt_large_number(abs($totals->visitors_change)); ?></span>
-                <span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span>
-                <span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span>
+                <?php if ($totals->visitors_change != 0) {
+                    ?><span><?php echo fmt_large_number(abs($totals->visitors_change)); ?></span><?php
+                } ?>
+                <?php if ($totals->visitors_change > 0) {
+                    ?> <span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
+                } ?>
+                <?php if ($totals->visitors_change < 0) {
+                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+                } ?>
             </td>
         </tr>
         <tr class="<?php echo $totals->pageviews_change > 0 ? 'ka-up' : ''; ?> <?php echo $totals->pageviews_change < 0 ? 'ka-down' : ''; ?>">
@@ -114,13 +119,19 @@ use function KokoAnalytics\get_referrer_url_label;
             <td class='ka-totals--amount'>
                 <span title="<?php echo esc_attr($totals->pageviews); ?>"><?php echo fmt_large_number($totals->pageviews); ?></span>
                 <span class="ka-totals--change">
-                    <?php echo $totals->pageviews_change_rel !== null ? sprintf('%+.0f%%', $totals->pageviews_change_rel * 100) : ''; ?>
+                    <?php echo $totals->pageviews_change_rel ? sprintf('%+.0f%%', $totals->pageviews_change_rel * 100) : ''; ?>
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <span><?php echo fmt_large_number(abs($totals->pageviews_change)); ?></span>
-                <span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span>
-                <span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span>
+                <?php if ($totals->pageviews_change != 0) {
+                    ?><span><?php echo fmt_large_number(abs($totals->pageviews_change)); ?></span><?php
+                } ?>
+                <?php if ($totals->pageviews_change > 0) {
+                    ?><span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
+                } ?>
+                <?php if ($totals->pageviews_change < 0) {
+                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+                } ?>
             </td>
         </tr>
         <tr id="ka-realtime">
@@ -138,9 +149,7 @@ use function KokoAnalytics\get_referrer_url_label;
         <?php new Chart_View($chart_data, $dateStart, $dateEnd); ?>
     </div>
 
-    <div class="ka-dashboard-components <?php if ($page !== 0) {
-        echo 'page-filter-active';
-                                        } ?>" >
+    <div class="ka-dashboard-components <?php echo $page !== 0 ? 'page-filter-active' : ''; ?>" >
 
         <?php /* TOP PAGES */ ?>
         <div id="top-pages" class="ka-box">
@@ -155,10 +164,10 @@ use function KokoAnalytics\get_referrer_url_label;
                 </thead>
                 <tbody>
                     <?php foreach ($posts as $i => $p) { ?>
-                        <tr>
+                        <tr <?php echo $page == $p->id ? 'class="page-filter-active"' : ''; ?>>
                             <td><?php echo  $posts_offset + $i + 1; ?></td>
                             <td><a href="<?php echo esc_attr(add_query_arg(['p' => $p->id])); ?>"><?php echo esc_html($p->post_title); ?></a></td>
-                            <td><?php echo $p->visitors; ?></td>
+                            <td><?php echo max(1, $p->visitors); ?></td>
                             <td><?php echo $p->pageviews; ?></td>
                         </tr>
                     <?php } ?>
@@ -200,7 +209,7 @@ use function KokoAnalytics\get_referrer_url_label;
                         <tr>
                             <td><?php echo $referrers_offset + $i + 1; ?></td>
                             <td><a href="<?php echo esc_attr(get_referrer_url_href($r->url)); ?>"><?php echo get_referrer_url_label(esc_html($r->url)); ?></a></td>
-                            <td><?php echo $r->visitors; ?></td>
+                            <td><?php echo max(1, $r->visitors); ?></td>
                             <td><?php echo $r->pageviews; ?></td>
                         </tr>
                     <?php } ?>
@@ -226,10 +235,6 @@ use function KokoAnalytics\get_referrer_url_label;
         </div>
         <?php do_action_deprecated('koko_analytics_show_dashboard_components', [], '1.4', 'koko_analytics_after_dashboard_components'); ?>
         <?php do_action('koko_analytics_after_dashboard_components', $dateStart, $dateEnd); ?>
-    </div>
-
-    <div class="ka-margin-s" style="text-align: right">
-        <p><?php echo $this->get_usage_tip(); ?></p>
     </div>
 </div>
 

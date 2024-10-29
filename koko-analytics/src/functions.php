@@ -22,33 +22,34 @@ function maybe_collect_request()
     collect_request();
 }
 
-function extract_pageview_data(): array
+function extract_pageview_data(array $raw): array
 {
     // do nothing if a required parameter is missing
     if (
-        !isset($_GET['p'])
-        || !isset($_GET['nv'])
-        || !isset($_GET['up'])
+        !isset($raw['p'])
+        || !isset($raw['nv'])
+        || !isset($raw['up'])
     ) {
-        return array();
+        return [];
     }
 
-    // do nothing if parameters are not of the correct type
-    if (
-        false === filter_var($_GET['p'], FILTER_VALIDATE_INT)
-        || false === filter_var($_GET['nv'], FILTER_VALIDATE_INT)
-        || false === filter_var($_GET['up'], FILTER_VALIDATE_INT)
-    ) {
-        return array();
+    // grab and validate parameters
+    $post_id = \filter_var($raw['p'], FILTER_VALIDATE_INT);
+    $new_visitor = \filter_var($raw['nv'], FILTER_VALIDATE_INT);
+    $unique_pageview = \filter_var($raw['up'], FILTER_VALIDATE_INT);
+    $referrer_url = !empty($raw['r']) ? \filter_var(\trim($raw['r']), FILTER_VALIDATE_URL) : '';
+
+    if ($post_id === false || $new_visitor === false || $unique_pageview === false || $referrer_url === false) {
+        return [];
     }
 
-    return array(
+    return [
         'p',                // type indicator
-        $_GET['p'],   // 0: post ID
-        $_GET['nv'],  // 1: is new visitor?
-        $_GET['up'],  // 2: is unique pageview?
-        isset($_GET['r']) ? trim($_GET['r']) : '',   // 3: referrer URL
-    );
+        $post_id,
+        $new_visitor,
+        $unique_pageview,
+        $referrer_url,
+    ];
 }
 
 function extract_event_data(): array
@@ -80,7 +81,7 @@ function collect_request()
     if (isset($_GET['e'])) {
         $data = extract_event_data();
     } else {
-        $data = extract_pageview_data();
+        $data = extract_pageview_data($_GET);
     }
 
     if (!empty($data)) {
@@ -334,7 +335,7 @@ function get_referrer_url_href(string $url): string
     if (strpos($url, '://t.co/') !== false) {
         return 'https://twitter.com/search?q=' . urlencode($url);
     } elseif (strpos($url, 'android-app://') === 0) {
-        return str_replace($url, 'android-app://', 'https://play.google.com/store/apps/details?id=');
+        return str_replace('android-app://', 'https://play.google.com/store/apps/details?id=', $url);
     }
 
     return apply_filters('koko_analytics_referrer_url_href', $url);
@@ -342,13 +343,16 @@ function get_referrer_url_href(string $url): string
 
 function get_referrer_url_label(string $url): string
 {
-    // strip protocol and www. prefix
-    $url = (string) preg_replace('/^https?:\/\/(www\.)?(.+?)\/?$/', '$2', $url);
-
     // if link starts with android-app://, turn that prefix into something more human readable
     if (strpos($url, 'android-app://') === 0) {
-        return str_replace($url, 'android-app://', 'Android app: ');
+        return str_replace('android-app://', 'Android app: ', $url);
     }
+
+    // strip protocol and www. prefix
+    $url = (string) preg_replace('/^https?:\/\/(?:www\.)?/', '', $url);
+
+    // trim trailing slash
+    $url = rtrim($url, '/');
 
     return apply_filters('koko_analytics_referrer_url_label', $url);
 }
