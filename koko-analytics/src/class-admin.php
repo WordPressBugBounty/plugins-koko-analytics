@@ -26,6 +26,10 @@ class Admin
             add_filter('plugin_action_links_' . $plugin_basename, array($this, 'add_plugin_settings_link'), 10, 1);
             add_filter('plugin_row_meta', array($this, 'add_plugin_meta_links'), 10, 2);
         }
+
+        // Construct Jetpack Importer
+        // TODO: Maybe only do this if JetPack is active?
+        new Jetpack_Importer();
     }
 
     public function register_menu(): void
@@ -121,8 +125,6 @@ class Admin
         /* translators: %1$s links to the WordPress.org plugin review page, %2$s links to the admin page for creating a new post */
         return \sprintf(wp_kses(__('If you enjoy using Koko Analytics, please consider <a href="%1$s">purchasing Koko Analytics Pro</a>, <a href="%2$s">reviewing the plugin on WordPress.org</a> or <a href="%3$s">writing about it on your blog</a> to help out.', 'koko-analytics'), array('a' => array('href' => array()))), 'https://www.kokoanalytics.com/pricing/', 'https://wordpress.org/support/view/plugin-reviews/koko-analytics?rate=5#postform', admin_url('post-new.php'));
     }
-
-
 
     /**
      * Add the settings link to the Plugins overview

@@ -330,6 +330,33 @@ function create_local_datetime($timestr): ?\DateTimeImmutable
     return $dt_local;
 }
 
+/**
+ *  @param int|WP_Post $post
+ */
+function get_page_title($post): string
+{
+    $post = get_post($post);
+    if (!$post) {
+        return '(deleted post)';
+    }
+
+    $title = $post->post_title;
+
+    // if post has no title, use path + query part from permalink
+    if ($title === '') {
+        $permalink = get_permalink($post);
+        $url_parts = parse_url($permalink);
+        $title = $url_parts['path'];
+
+        if ($url_parts['query'] !== '') {
+            $title .= '?';
+            $title .= $url_parts['query'];
+        }
+    }
+
+    return $title;
+}
+
 function get_referrer_url_href(string $url): string
 {
     if (strpos($url, '://t.co/') !== false) {
@@ -355,4 +382,30 @@ function get_referrer_url_label(string $url): string
     $url = rtrim($url, '/');
 
     return apply_filters('koko_analytics_referrer_url_label', $url);
+}
+
+/**
+ * Return's client IP for current request, even if behind a reverse proxy
+ */
+function get_client_ip(): string
+{
+    $ips = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+
+    // X-Forwarded-For sometimes contains a comma-separated list of IP addresses
+    // @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For
+    if (! is_array($ips)) {
+        $ips = array_map('trim', explode(',', $ips));
+    }
+
+    // Always add REMOTE_ADDR to list of ips
+    $ips[] = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    // return first valid IP address from list
+    foreach ($ips as $ip) {
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+
+    return '';
 }
