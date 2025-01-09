@@ -23,6 +23,7 @@ use function KokoAnalytics\get_referrer_url_label;
 use function KokoAnalytics\percent_format_i18n;
 ?>
 <div class="wrap">
+    <?php $this->maybe_show_pro_notice(); ?>
     <?php $this->maybe_show_adblocker_notice(); ?>
 
     <div class="ka-dashboard-nav">
@@ -110,14 +111,16 @@ use function KokoAnalytics\percent_format_i18n;
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <?php if ($diff != 0) {
-                    ?><span><?php echo number_format_i18n(abs($diff)); ?></span><?php
-                } ?>
-                <?php if ($diff > 0) {
-                    ?> <span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
-                } ?>
-                <?php if ($diff < 0) {
-                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+                <?php
+                if ($diff != 0) {
+                    echo number_format_i18n(abs($diff));
+                    echo ' ';
+                }
+                if ($diff > 0) {
+                    echo esc_html__('more than previous period', 'koko-analytics');
+                }
+                if ($diff < 0) {
+                    echo esc_html__('less than previous period', 'koko-analytics');
                 } ?>
             </td>
         </tr>
@@ -135,14 +138,16 @@ use function KokoAnalytics\percent_format_i18n;
                 </span>
             </td>
             <td class='ka-totals--subtext'>
-                <?php if ($diff != 0) {
-                    ?><span><?php echo number_format_i18n(abs($diff)); ?></span><?php
-                } ?>
-                <?php if ($diff > 0) {
-                    ?><span class="ka-totals--subtext-up"><?php echo esc_html__('more than previous period', 'koko-analytics'); ?></span><?php
-                } ?>
-                <?php if ($diff < 0) {
-                    ?><span class="ka-totals--subtext-down"><?php echo esc_html__('less than previous period', 'koko-analytics'); ?></span><?php
+               <?php
+                if ($diff != 0) {
+                    echo number_format_i18n(abs($diff));
+                    echo ' ';
+                }
+                if ($diff > 0) {
+                    echo esc_html__('more than previous period', 'koko-analytics');
+                }
+                if ($diff < 0) {
+                    echo esc_html__('less than previous period', 'koko-analytics');
                 } ?>
             </td>
         </tr>
