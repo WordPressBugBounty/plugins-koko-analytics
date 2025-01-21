@@ -80,6 +80,15 @@ class Jetpack_Importer
 
                         </td>
                     </tr>
+
+                    <tr>
+                        <th><label for="chunk-size"><?php esc_html_e('Chunk size', 'koko-analytics'); ?></label></th>
+                        <td>
+                            <input id="chunk-size" name="chunk-size" type="number" value="30" min="1" max="90" required>
+                            <p class="description"><?php esc_html_e('The number of days to pull in at once. If your website has a lot of different posts or pages, it may be worth setting this to a lower value.', 'koko-analytics'); ?></p>
+
+                        </td>
+                    </tr>
                 </table>
 
                 <p>
@@ -115,10 +124,10 @@ class Jetpack_Importer
 
         // save params
         $params = [
-        'wpcom-api-key' => trim($_POST['wpcom-api-key'] ?? ''),
-        'wpcom-blog-uri' => trim($_POST['wpcom-blog-uri'] ?? ''),
-        'date-start' => trim($_POST['date-start'] ?? ''),
-        'date-end' => trim($_POST['date-end'] ?? ''),
+            'wpcom-api-key' => trim($_POST['wpcom-api-key'] ?? ''),
+            'wpcom-blog-uri' => trim($_POST['wpcom-blog-uri'] ?? ''),
+            'date-start' => trim($_POST['date-start'] ?? ''),
+            'date-end' => trim($_POST['date-end'] ?? ''),
         ];
 
         // all params are required
@@ -134,7 +143,7 @@ class Jetpack_Importer
             if ($date_end < $date_start) {
                 throw new Exception("End date must be after start date");
             }
-        } catch (Exception) {
+        } catch (Exception $e) {
             $this->redirect_with_error(admin_url('/index.php?page=koko-analytics&tab=jetpack_importer'), __('Invalid date fields', 'koko-analytics'));
             exit;
         }
@@ -144,7 +153,10 @@ class Jetpack_Importer
 
         // work backwards from end date, so most recent stats first
         $chunk_end = $date_end;
-        $chunk_size = \max(1, \min(30, $date_end->diff($date_start)->days));
+
+        // determine size of each chunk to pull in and clamp it between 1 and supplied chunk size
+        $max_chunk_size = isset($_GET['chunk-size']) ? (int) $_GET['chunk-size'] : 30;
+        $chunk_size = \max(1, \min($max_chunk_size, $date_end->diff($date_start)->days));
 
         // redirect to first chunk
         wp_safe_redirect(add_query_arg(['koko_analytics_action' => 'jetpack_import_chunk', 'chunk_size' => $chunk_size, 'chunk_end' => $chunk_end->format('Y-m-d'), '_wpnonce' => wp_create_nonce('koko_analytics_jetpack_import_chunk')]));
@@ -218,7 +230,7 @@ class Jetpack_Importer
         );?>
         </p>
         <p><?php esc_html_e('Please do not close this browser tab while the importer is running.', 'koko-analytics'); ?></p>
-    <p><?php printf(__('Estimated time left: %s seconds.', 'koko-analytics'), round($chunks_left * 1.5)); ?></p>
+        <p><?php printf(__('Estimated time left: %s seconds.', 'koko-analytics'), round($chunks_left * 1.5)); ?></p>
             <?php
             exit;
     }
@@ -251,7 +263,7 @@ class Jetpack_Importer
         $body = wp_remote_retrieve_body($response);
         try {
             $data = json_decode($body, null, 512, JSON_THROW_ON_ERROR);
-        } catch (Exception) {
+        } catch (Exception $e) {
             throw new Exception(__('Received non-JSON response from WordPress.com API:', 'koko-analytics') . "\n\n" . $body);
         }
 
@@ -269,21 +281,28 @@ class Jetpack_Importer
         foreach ($data as $item) {
             $site_views = 0;
 
-            // update post stats for this date one-by-one
-            // TODO: We could make this more efficient by executing a single bulk query
+            // if there were no stats for this date, simply skip
+            if (count($item->postviews) === 0) {
+                continue;
+            }
+
+            // update post stats for this date in a single bulk query
+            $placeholders = rtrim(str_repeat('(%s,%d,%d,%d),', count($item->postviews)), ',');
+            $values = [];
             foreach ($item->postviews as $postviews) {
                 $site_views += $postviews->views;
+                array_push($values, $item->date, $postviews->post_id, $postviews->views, $postviews->views);
+            }
 
-                $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, id, visitors, pageviews) VALUES(%s, %d, %d, %d) ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews);", [$item->date, $postviews->post_id, $postviews->views, $postviews->views]);
-                $wpdb->query($query);
+            $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, id, visitors, pageviews) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values);
+            $wpdb->query($query);
 
-                if ($wpdb->last_error !== '') {
-                    throw new Exception(__("A database error occurred: ", 'koko-analytics') . " {$wpdb->last_error}");
-                }
+            if ($wpdb->last_error !== '') {
+                throw new Exception(__("A database error occurred: ", 'koko-analytics') . " {$wpdb->last_error}");
             }
 
             // update site stats
-            $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_site_stats(date, visitors, pageviews) VALUES(%s, %d, %d) ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews);", [$item->date, $site_views, $site_views]);
+            $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_site_stats(date, visitors, pageviews) VALUES (%s, %d, %d) ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", [$item->date, $site_views, $site_views]);
             $wpdb->query($query);
             if ($wpdb->last_error !== '') {
                 throw new Exception(__("A database error occurred: ", 'koko-analytics') . " {$wpdb->last_error}");

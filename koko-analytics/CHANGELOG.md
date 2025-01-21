@@ -1,13 +1,16 @@
 # Changelog
 
-### 1.6.2 - Jan 21, 2025
+### 1.6.3 - Jan 21, 2025
 
 - Schedule missing `koko_analytics_aggregate_stats` event.
 - Ensure pageview counts are always added to the correct day, even if WP Cron stalls for more than 24 hours.
 - Improved correctness of the realtime visitor count in case of WP Cron stalls.
 - Move the temporary buffer file to its own directory inside the uploads directory.
-- Bump HTTP request timeout for Jetpack importer up from 5 seconds to 90 seconds.
-- Fix division by zero if importing a single day of data with Jetpack Importer.
+- Fix syntax error on PHP 7.4 introduced in version 1.6.2
+- Jetpack Importer: Fix division by zero if importing a single day of data
+- Jetpack Importer: Bump HTTP request timeout for Jetpack importer up from 5 seconds to 90 seconds.
+- Jetpack Importer: Allow choosing a custom chunk size, which can be useful for sites with a large amount of posts or pages.
+- Do not delete database tables on plugin uninstall by default.
 
 
 ### 1.6.1 - Jan 20, 2025
