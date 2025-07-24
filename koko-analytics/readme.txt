@@ -1,15 +1,15 @@
 === Koko Analytics - Privacy-Friendly Statistics for WordPress ===
 Contributors: Ibericode, DvanKooten
 Donate link: https://wordpress.org/support/plugin/koko-analytics/reviews/#new-post
-Tags: analytics, statistics, stats, analytics alternative
+Tags: analytics, statistics, stats, google analytics
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 1.8.5
+Stable tag: 1.8.6
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
 
-Koko Analytics is a plug and play privacy-friendly analytics plugin for WordPress.
+Get plug and play, privacy-friendly and GDPR/CCPA compliant statistics for WordPress with Koko Analytics.
 
 == Description ==
 
@@ -19,7 +19,7 @@ Koko Analytics is a privacy-friendly analytics plugin for WordPress sites.
 
 It does not use any external services, so no data is shared with any third-party. Nothing specific to any individual visitor is collected, only aggregated counts.
 
-Stop sharing visitor data with third-party companies who also happen to sell ads. Stop slowing down your website with large tracking scripts. Liberate and own your data!
+Stop sharing visitor data with third-party companies who also happen to sell ads (looking at you, Google Analytics). Stop slowing down your website with large tracking scripts. Liberate and own your data!
 
 Koko Analytics lets you focus on the important statistics while completely respecting the privacy of your visitors.
 
@@ -48,8 +48,9 @@ You can view a [live demo here](https://www.kokoanalytics.com/?koko-analytics-da
 
 ### Upgrade to Koko Analytics Pro
 
-All of the features listed above are available for free. Some additional features are available through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing):
+All of the features listed above are available for free. Some advanced features are available through [Koko Analytics Pro](https://www.kokoanalytics.com/pricing):
 
+- [Geo-location](https://www.kokoanalytics.com/features/geo-location/): see exactly which countries your site is visited from.
 - [Event Tracking](https://www.kokoanalytics.com/features/custom-event-tracking/): track outbound link clicks, form submissions or any other type of custom event.
 - [Email Reports](https://www.kokoanalytics.com/features/email-reports/): Receive a daily, weekly or monthly email summary of your website's most important statistics.
 - [CSV Export](https://www.kokoanalytics.com/features/csv-export/): The ability to export your dashboard data to CSV for advanced analysis.
@@ -133,6 +134,11 @@ Koko Analytics is currently only able to track posts, pages and other post types
 
 
 == Changelog ==
+
+### 1.8.6 - Jul 24, 2025
+
+- Mention [geo-location](https://www.kokoanalytics.com/features/geo-location/), a new premium feature, in the settings page sidebar.
+- Improved height of select and textarea elements on settings page.
 
 
 ### 1.8.5 - Jul 21, 2025
@@ -771,11 +777,5 @@ If your WordPress root directory is not writable, go to the Koko Analytics setti
 
 #### 1.0.10 - Mar 23, 2020
 
-- Print configuration object early on in page HTML so it is easier to override it using a cookie consent plugin.
-- Add help text explaining the use of a multi-select element.
-
-
-#### 1.0.9 - Mar 9, 2020
-
-- Use arrow keys (without Ctrl-key) for quickly ...
+- Print configuration object early on in page HTML so it is easier to override it using ...
 
