@@ -5,6 +5,7 @@ defined('ABSPATH') or exit;
 /** @var \wpdb $wpdb */
 global $wpdb;
 
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_site_stats");
 $wpdb->query(
     "CREATE TABLE {$wpdb->prefix}koko_analytics_site_stats (
            date DATE PRIMARY KEY NOT NULL,
@@ -13,6 +14,7 @@ $wpdb->query(
     ) ENGINE=INNODB CHARACTER SET=ascii"
 );
 
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_post_stats");
 $wpdb->query(
     "CREATE TABLE {$wpdb->prefix}koko_analytics_post_stats (
        date DATE NOT NULL,
@@ -23,6 +25,7 @@ $wpdb->query(
     ) ENGINE=INNODB CHARACTER SET=ascii"
 );
 
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_referrer_stats");
 $wpdb->query(
     "CREATE TABLE {$wpdb->prefix}koko_analytics_referrer_stats (
        date DATE NOT NULL,
@@ -33,6 +36,7 @@ $wpdb->query(
     ) ENGINE=INNODB CHARACTER SET=ascii"
 );
 
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_referrer_urls");
 $wpdb->query(
     "CREATE TABLE {$wpdb->prefix}koko_analytics_referrer_urls (
        id MEDIUMINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
