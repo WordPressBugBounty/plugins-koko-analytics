@@ -1,34 +1,21 @@
 <?php
 
-require __DIR__ . '/src/functions.php';
-require __DIR__ . '/src/global-functions.php';
+require __DIR__ . '/src/Resources/functions/functions.php';
+require __DIR__ . '/src/Resources/functions/global.php';
+require __DIR__ . '/src/Resources/functions/collect.php';
+require __DIR__ . '/src/Resources/backwards-compat.php';
 
-spl_autoload_register(function($class) {
-    static $classmap = [
-        'KokoAnalytics\\Admin' => '/src/class-admin.php',
-        'KokoAnalytics\\Aggregator' => '/src/class-aggregator.php',
-        'KokoAnalytics\\Command' => '/src/class-command.php',
-        'KokoAnalytics\\Chart_View' => '/src/class-chart-view.php',
-        'KokoAnalytics\\Dashboard' => '/src/class-dashboard.php',
-        'KokoAnalytics\\Dashboard_Widget' => '/src/class-dashboard-widget.php',
-        'KokoAnalytics\\Dates' => '/src/class-dates.php',
-        'KokoAnalytics\\Data_Exporter' => '/src/class-data-exporter.php',
-        'KokoAnalytics\\Data_Importer' => '/src/class-data-importer.php',
-        'KokoAnalytics\\Endpoint_Installer' => '/src/class-endpoint-installer.php',
-        'KokoAnalytics\\Jetpack_Importer' => '/src/class-jetpack-importer.php',
-        'KokoAnalytics\\Migrations' => '/src/class-migrations.php',
-        'KokoAnalytics\\Pageview_Aggregator' => '/src/class-pageview-aggregator.php',
-        'KokoAnalytics\\Plugin' => '/src/class-plugin.php',
-        'KokoAnalytics\\Pruner' => '/src/class-pruner.php',
-        'KokoAnalytics\\Rest' => '/src/class-rest.php',
-        'KokoAnalytics\\Script_Loader' => '/src/class-script-loader.php',
-        'KokoAnalytics\\ShortCode_Site_Counter' => '/src/class-shortcode-site-counter.php',
-        'KokoAnalytics\\Shortcode_Most_Viewed_Posts' => '/src/class-shortcode-most-viewed-posts.php',
-        'KokoAnalytics\\Stats' => '/src/class-stats.php',
-        'KokoAnalytics\\Widget_Most_Viewed_Posts' => '/src/class-widget-most-viewed-posts.php',
-    ];
+spl_autoload_register(function ($class) {
+    // only act on classnames starting with our namespace
+    if (!str_starts_with($class, 'KokoAnalytics\\')) {
+        return;
+    }
 
-    if (isset($classmap[$class])) {
-        require __DIR__ . $classmap[$class];
+    // turn FQCN into filename according to PSR-4 standard
+    $file = substr($class, 14);
+    $file = str_replace('\\', '/', $file);
+    $file = __DIR__ . "/src/{$file}.php";
+    if (is_file($file)) {
+        require $file;
     }
 });
