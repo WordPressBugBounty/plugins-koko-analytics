@@ -16,6 +16,7 @@ class Admin
     {
         global $pagenow;
 
+        add_action('admin_notices', [$this, 'show_migrate_to_v2_notice'], 10, 0);
         add_action('admin_menu', [$this, 'register_menu'], 10, 0);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
 
@@ -24,6 +25,8 @@ class Admin
         add_action('koko_analytics_reset_statistics', [Actions::class, 'reset_statistics'], 10, 0);
         add_action('koko_analytics_export_data', [Actions::class, 'export_data'], 10, 0);
         add_action('koko_analytics_import_data', [Actions::class, 'import_data'], 10, 0);
+        add_action('koko_analytics_migrate_post_stats_to_v2', [Actions::class, 'migrate_post_stats_to_v2'], 10, 0);
+        add_action('koko_analytics_migrate_referrer_stats_to_v2', [Actions::class, 'migrate_referrer_stats_to_v2'], 10, 0);
 
         // Hooks for plugins overview page
         if ($pagenow === 'plugins.php') {
@@ -93,5 +96,53 @@ class Admin
 
         wp_enqueue_style('koko-analytics-dashboard', plugins_url('assets/dist/css/dashboard-2.css', KOKO_ANALYTICS_PLUGIN_FILE), [], KOKO_ANALYTICS_VERSION);
         wp_enqueue_script('koko-analytics-dashboard', plugins_url('assets/dist/js/dashboard.js', KOKO_ANALYTICS_PLUGIN_FILE), [], KOKO_ANALYTICS_VERSION, [ 'strategy' => 'defer' ]);
+    }
+
+    public function show_migrate_to_v2_notice(): void
+    {
+        // only show to users with required capability
+        if (!current_user_can('manage_koko_analytics')) {
+            return;
+        }
+
+        // test if we have post_stats to migrate
+        /** @var wpdb $wpdb */
+        global $wpdb;
+
+        // Test for unmigrated post id records
+        $results = $wpdb->get_var("SELECT COUNT(DISTINCT(post_id)) FROM {$wpdb->prefix}koko_analytics_post_stats WHERE post_id IS NOT NULL AND path_id IS NULL");
+        if ($results) {
+            ?>
+            <div class="notice notice-warning">
+                <p>
+                    <?php esc_html_e('Koko Analytics needs to migrate your page stats to a new storage format.', 'koko-analytics'); ?>
+                    <?php esc_html_e('Click the button below to proceed with the database migration, this can take some time if you have a large site.', 'koko-analytics'); ?>
+                </p>
+                <form action="" method="post">
+                    <input type="hidden" name="koko_analytics_action" value="migrate_post_stats_to_v2">
+                    <p><button type="submit" class="button button-primary"><?php esc_html_e('Migrate', 'koko-analytics'); ?></button></p>
+                </form>
+                <p class="help description text-muted"><?php esc_html_e('We recommend making a back-up of your Koko Analytics database tables before running the migration.', 'koko-analytics'); ?></p>
+            </div>
+            <?php
+        }
+
+        // Test for unmigrated referrer records
+        $results = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE url LIKE 'http://%' OR url LIKE 'https://%'");
+        if ($results && !get_option('koko_analytics_referrers_v2')) {
+            ?>
+            <div class="notice notice-warning">
+                <p>
+                    <?php esc_html_e('Koko Analytics needs to migrate your referrer stats to a new storage format.', 'koko-analytics'); ?>
+                    <?php esc_html_e('Click the button below to proceed with the database migration, this can take some time if you have a large site.', 'koko-analytics'); ?>
+                </p>
+                <form action="" method="post">
+                    <input type="hidden" name="koko_analytics_action" value="migrate_referrer_stats_to_v2">
+                    <p><button type="submit" class="button button-primary"><?php esc_html_e('Migrate', 'koko-analytics'); ?></button></p>
+                </form>
+                <p class="help description text-muted"><?php esc_html_e('We recommend making a back-up of your Koko Analytics database tables before running the migration.', 'koko-analytics'); ?></p>
+            </div>
+            <?php
+        }
     }
 }
