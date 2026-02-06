@@ -34,7 +34,7 @@ function extract_pageview_data(array $raw): array
     $path = substr(trim($raw['pa']), 0, 2000);
     $post_id = \filter_var($raw['po'], FILTER_VALIDATE_INT);
     $referrer_url = !empty($raw['r']) ? \filter_var(\trim($raw['r']), FILTER_VALIDATE_URL) : '';
-    if ($post_id === false || $referrer_url === false) {
+    if ($post_id === false || $referrer_url === false || filter_var("https://localhost$path", FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED) === false) {
         return [];
     }
 
@@ -104,6 +104,7 @@ function collect_request()
         return;
     }
 
+    // we need to accept both GET and POST because the AMP integration uses URL query parameters
     $request_params = array_merge($_GET, $_POST);
     $data = isset($request_params['e']) ? extract_event_data($request_params) : extract_pageview_data($request_params);
     if (!empty($data)) {
@@ -120,7 +121,8 @@ function collect_request()
         \header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request');
     }
 
-    \header('Content-Type: text/plain');
+    \header('Content-Type: text/plain; charset=utf-8');
+    \header('X-Robots-Tag: noindex, nofollow');
 
     // Prevent this response from being cached
     \header('Cache-Control: no-cache, must-revalidate, max-age=0');

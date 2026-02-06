@@ -22,36 +22,36 @@ class Actions
     public static function install_optimized_endpoint(): void
     {
         $result = Endpoint_Installer::install();
-        $type = $result === true ? 'success' : 'warning';
-        $message = $result === true ? __('Successfully installed optimized endpoint.', 'koko-analytics') : $result;
-        wp_safe_redirect(add_query_arg([ 'notice' => ['type' => $type, 'message' => $message] ], wp_get_referer()));
+        if ($result !== true) {
+            wp_safe_redirect(add_query_arg(['error' => urlencode($result)], wp_get_referer()));
+        } else {
+            wp_safe_redirect(add_query_arg(['message' => urlencode(__('Successfully installed optimized endpoint.', 'koko-analytics'))], wp_get_referer()));
+        }
         exit;
     }
 
     public static function save_settings(): void
     {
-        if (!current_user_can('manage_koko_analytics')) {
+        if (!current_user_can('manage_koko_analytics') || ! check_admin_referer('koko_analytics_save_settings') || ! isset($_POST['koko_analytics_settings'])) {
             return;
         }
 
-        check_admin_referer('koko_analytics_save_settings');
-
-        $posted                        = $_POST['koko_analytics_settings'];
-        $settings                            = get_settings();
+        // merge posted data with saved data to allow for partial updates
+        $settings = array_merge(get_settings(), $_POST['koko_analytics_settings']);
 
         // get rid of deprecated setting keys
+        // TODO: Maybe whitelist default settings here and remove every non-default key?
         unset($settings['use_cookie']);
 
-        $settings['exclude_ip_addresses']    = array_filter(array_map('trim', explode(PHP_EOL, str_replace(',', PHP_EOL, strip_tags($posted['exclude_ip_addresses'])))), function ($value) {
-            return $value !== '';
-        });
-        $settings['exclude_user_roles']      = $posted['exclude_user_roles'] ?? [];
-        $settings['prune_data_after_months'] = abs((int) $posted['prune_data_after_months']);
-        $settings['is_dashboard_public']     = (int) $posted['is_dashboard_public'];
-        $settings['default_view']            = trim($posted['default_view']);
-        $settings['tracking_method'] = in_array($posted['tracking_method'], ['cookie', 'fingerprint', 'none']) ? $posted['tracking_method'] : 'cookie';
+        $settings['exclude_ip_addresses'] = is_array($settings['exclude_ip_addresses']) ? $settings['exclude_ip_addresses'] : explode(PHP_EOL, str_replace(',', PHP_EOL, strip_tags($settings['exclude_ip_addresses'])));
+        $settings['exclude_ip_addresses']    = array_filter(array_map('trim', $settings['exclude_ip_addresses']));
 
-        $settings = apply_filters('koko_analytics_sanitize_settings', $settings, $posted);
+        $settings['prune_data_after_months'] = abs((int) $settings['prune_data_after_months']);
+        $settings['is_dashboard_public']     = (int) $settings['is_dashboard_public'];
+        $settings['default_view']            = trim($settings['default_view']);
+        $settings['tracking_method'] = in_array($settings['tracking_method'], ['cookie', 'fingerprint', 'none']) ? $settings['tracking_method'] : 'cookie';
+
+        $settings = apply_filters('koko_analytics_sanitize_settings', $settings, $settings);
         update_option('koko_analytics_settings', $settings, true);
 
         // maybe create sessions directory & initial seed file
@@ -63,7 +63,7 @@ class Actions
         // Re-create optimized endpoint to ensure its contents are up-to-date
         Endpoint_Installer::install();
 
-        wp_safe_redirect(add_query_arg(['settings-updated' => true], wp_get_referer()));
+        wp_safe_redirect(add_query_arg(['settings-updated' => 1], wp_get_referer()));
         exit;
     }
 
@@ -77,8 +77,7 @@ class Actions
         do {
             // Select all rows with a post ID but no path ID
             // Note: there is no need for an OFFSET here because we are updating rows as we go
-            $results = $wpdb->get_results("SELECT DISTINCT(post_id) FROM {$wpdb->prefix}koko_analytics_post_stats WHERE post_id IS NOT NULL AND path_id IS NULL LIMIT 500");
-
+            $results = $wpdb->get_results("SELECT DISTINCT(post_id) FROM {$wpdb->prefix}koko_analytics_post_stats WHERE post_id IS NOT NULL AND path_id IS NULL LIMIT 1000");
 
             // Stop once there are no more rows in result set
             if (!$results) {
@@ -114,6 +113,8 @@ class Actions
         ) ENGINE=INNODB CHARACTER SET=ascii");
 
         $wpdb->query("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, path_id, post_id, visitors, pageviews) SELECT date, path_id, post_id, SUM(visitors), SUM(pageviews) FROM {$wpdb->prefix}koko_analytics_post_stats_old GROUP BY date, path_id");
+
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_post_stats_old");
     }
 
     public static function migrate_referrer_stats_to_v2(): void
@@ -129,11 +130,8 @@ class Actions
         // delete unused referrer URL's
         $wpdb->query("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE id NOT IN(SELECT DISTINCT(id) FROM {$wpdb->prefix}koko_analytics_referrer_stats)");
 
-        $offset = 0;
-        $limit = 500;
         do {
-            $results = $wpdb->get_results($wpdb->prepare("SELECT id, url FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE url LIKE 'http://%' or url LIKE 'https://%' LIMIT %d OFFSET %d", [$limit, $offset]));
-            $offset += $limit;
+            $results = $wpdb->get_results("SELECT id, url FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE url LIKE 'http://%' or url LIKE 'https://%' LIMIT 1000");
             if (!$results) {
                 break;
             }
@@ -189,10 +187,10 @@ class Actions
         global $wpdb;
 
         $offset = 0;
-        $limit = 500;
+        $limit = 1000;
 
         do {
-            $results = $wpdb->get_results($wpdb->prepare("SELECT post_id, path_id, p.path FROM {$wpdb->prefix}koko_analytics_post_stats s LEFT JOIN {$wpdb->prefix}koko_analytics_paths p ON p.id = s.path_id WHERE post_id IS NOT NULL AND post_id != 0 AND date <= '2025-08-29' GROUP BY post_id LIMIT %d OFFSET %d", [$limit, $offset]));
+            $results = $wpdb->get_results($wpdb->prepare("SELECT post_id, path_id, p.path FROM {$wpdb->prefix}koko_analytics_post_stats s LEFT JOIN {$wpdb->prefix}koko_analytics_paths p ON p.id = s.path_id WHERE post_id IS NOT NULL AND post_id != 0 GROUP BY post_id LIMIT %d OFFSET %d", [$limit, $offset]));
             $offset += $limit;
             if (!$results) {
                 break;

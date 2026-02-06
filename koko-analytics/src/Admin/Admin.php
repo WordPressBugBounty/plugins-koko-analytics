@@ -8,7 +8,9 @@
 
 namespace KokoAnalytics\Admin;
 
-use KokoAnalytics\Jetpack_Importer;
+use KokoAnalytics\Import\Jetpack_Importer;
+use KokoAnalytics\Import\Plausible_Importer;
+use KokoAnalytics\Router;
 
 class Admin
 {
@@ -37,16 +39,18 @@ class Admin
         }
 
         // actions for jetpack importer
-        add_action('koko_analytics_show_jetpack_importer_page', [Jetpack_Importer::class, 'show_page'], 10, 0);
         add_action('koko_analytics_start_jetpack_import', [Jetpack_Importer::class, 'start_import'], 10, 0);
         add_action('koko_analytics_jetpack_import_chunk', [Jetpack_Importer::class, 'import_chunk'], 10, 0);
+
+        // actions for plausible importer
+        add_action('koko_analytics_start_plausible_import', [Plausible_Importer::class, 'start_import'], 10, 0);
     }
 
     public function register_menu(): void
     {
-        add_submenu_page('index.php', esc_html__('Koko Analytics', 'koko-analytics'), esc_html__('Analytics', 'koko-analytics'), 'view_koko_analytics', 'koko-analytics', [Pages::class, 'show_page']);
+        add_submenu_page('index.php', 'Koko Analytics', 'Analytics', 'view_koko_analytics', 'koko-analytics', [Pages::class, 'show_dashboard_page']);
+        add_submenu_page('options-general.php', 'Koko Analytics', 'Koko Analytics', 'manage_koko_analytics', 'koko-analytics-settings', [Pages::class, 'show_settings_page']);
     }
-
 
     /**
      * Add the settings link to the Plugins overview
@@ -57,7 +61,7 @@ class Admin
      */
     public function add_plugin_settings_link($links): array
     {
-        $href = admin_url('index.php?page=koko-analytics&tab=settings');
+        $href = admin_url('options-general.php?page=koko-analytics-settings');
         $label = esc_html__('Settings', 'koko-analytics');
         $settings_link = "<a href=\"{$href}\">{$label}</a>";
         array_unshift($links, $settings_link);
@@ -91,7 +95,7 @@ class Admin
 
     public function enqueue_scripts($hook_suffix): void
     {
-        if ($hook_suffix !== 'dashboard_page_koko-analytics') {
+        if ($hook_suffix !== 'dashboard_page_koko-analytics' && $hook_suffix !== 'settings_page_koko-analytics-settings') {
             return;
         }
 
@@ -131,7 +135,7 @@ class Admin
 
         // Test for unmigrated referrer records
         $results = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE url LIKE 'http://%' OR url LIKE 'https://%'");
-        if ($results && !get_option('koko_analytics_referrers_v2')) {
+        if ($results > 0 && !get_option('koko_analytics_referrers_v2')) {
             ?>
             <div class="notice notice-warning">
                 <p>

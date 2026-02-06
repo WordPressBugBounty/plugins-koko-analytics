@@ -25,22 +25,38 @@ class Command
      */
     public function aggregate($args, $assoc_args)
     {
+        WP_CLI::line('Aggregating data...');
         Aggregator::run();
-        WP_CLI::success('Stats aggregated.');
+        WP_CLI::success('Data aggregated');
     }
 
+    /**
+     * Removes data older than the treshold specified on the settings page
+     */
+    public function prune($args, $assoc_args)
+    {
+        WP_CLI::line('Pruning data...');
+        do_action('koko_analytics_prune_data');
+        WP_CLI::success('Data pruned');
+    }
 
+    /**
+     * Migrates the post_stats database qtable to the new v2 structure.
+     */
     public function migrate_post_stats_to_v2($args, $assoc_args)
     {
         WP_CLI::line('Migrating post stats...');
         Actions::migrate_post_stats_to_v2();
-        WP_CLI::success('Done!');
+        WP_CLI::success('Post stats migrated');
     }
 
+    /**
+     * Migrates referrer stats to the new v2 format.
+     */
     public function migrate_referrer_stats_to_v2($args, $assoc_args)
     {
         WP_CLI::line('Migrating referrer stats...');
         Actions::migrate_referrer_stats_to_v2();
-        WP_CLI::success('Done!');
+        WP_CLI::success('Referrer stats migrated');
     }
 }

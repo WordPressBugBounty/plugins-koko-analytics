@@ -33,6 +33,13 @@ class Pageview_Aggregator
             return;
         }
 
+        // Sanity check on $path, it could be coming from an 1.8.x buffer file
+        // TODO: Remove in 2.1.x
+        if (is_numeric($path)) {
+            [$timestamp, $post_id, $new_visitor, $unique_pageview, $referrer_url] = $params;
+            $path = parse_url(get_permalink($post_id), PHP_URL_PATH);
+        }
+
         // convert unix timestamp to local datetime
         $dt = new DateTime('', wp_timezone());
         $dt->setTimestamp($timestamp);
@@ -116,15 +123,12 @@ class Pageview_Aggregator
     {
         global $wpdb;
 
-        // insert referrer stats
+        // insert page-specific stats
         foreach ($this->post_stats as $date => $stats) {
-            $paths = array_keys($stats);
-            $path_map = Path_Repository::upsert($paths);
-
-            // insert referrer stats
+            $path_ids = Path_Repository::upsert(array_keys($stats));
             $values = [];
             foreach ($stats as $path => $r) {
-                array_push($values, $date, $path_map[$path], $r['post_id'], $r['visitors'], $r['pageviews']);
+                array_push($values, $date, $path_ids[$path], $r['post_id'], $r['visitors'], $r['pageviews']);
             }
             $placeholders = rtrim(str_repeat('(%s,%d,%d,%d,%d),', count($stats)), ',');
             $wpdb->query($wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, path_id, post_id, visitors, pageviews) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values));
@@ -139,37 +143,10 @@ class Pageview_Aggregator
 
         // insert referrer stats
         foreach ($this->referrer_stats as $date => $stats) {
-            // retrieve ID's for known referrer urls
-            $referrer_urls = array_keys($stats);
-            $placeholders  = rtrim(str_repeat('%s,', count($referrer_urls)), ',');
-            $results       = $wpdb->get_results($wpdb->prepare("SELECT id, url FROM {$wpdb->prefix}koko_analytics_referrer_urls r WHERE r.url IN({$placeholders})", $referrer_urls));
-            foreach ($results as $r) {
-                $stats[ $r->url ]['id'] = $r->id;
-            }
-
-            // build query for new referrer urls
-            $new_referrer_urls = [];
-            foreach ($stats as $url => $r) {
-                if (! isset($r['id'])) {
-                    $new_referrer_urls[] = $url;
-                }
-            }
-
-            // insert new referrer urls and set ID in map
-            if (count($new_referrer_urls) > 0) {
-                $values       = $new_referrer_urls;
-                $placeholders = rtrim(str_repeat('(%s),', count($values)), ',');
-                $wpdb->query($wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_referrer_urls(url) VALUES {$placeholders}", $values));
-                $last_insert_id = $wpdb->insert_id;
-                foreach (array_reverse($values) as $url) {
-                    $stats[ $url ]['id'] = $last_insert_id--;
-                }
-            }
-
-            // insert referrer stats
+            $referrer_ids = Referrer_Repository::upsert(array_keys($stats));
             $values = [];
-            foreach ($stats as $r) {
-                array_push($values, $date, $r['id'], $r['visitors'], $r['pageviews']);
+            foreach ($stats as $url => $r) {
+                array_push($values, $date, $referrer_ids[$url], $r['visitors'], $r['pageviews']);
             }
             $placeholders = rtrim(str_repeat('(%s,%d,%d,%d),', count($stats)), ',');
             $wpdb->query($wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_referrer_stats(date, id, visitors, pageviews) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values));
@@ -184,7 +161,7 @@ class Pageview_Aggregator
 
         // remove all data older than 60 minutes
         $one_hour_ago = \time() - 60 * 60;
-        foreach ($counts as $timestamp => $v) {
+        foreach ($counts as $timestamp => $unused) {
             // delete all data older than one hour
             if ((int) $timestamp < $one_hour_ago) {
                 unset($counts[ $timestamp ]);
@@ -207,7 +184,7 @@ class Pageview_Aggregator
         $url = strtolower($url);
 
         // run custom blocklist first
-        // @see https://github.com/ibericode/koko-analytics/blob/master/code-snippets/add-domains-to-referrer-blocklist.php
+        // @see https://github.com/ibericode/koko-analytics/blob/main/code-snippets/add-domains-to-referrer-blocklist.php
         $custom_blocklist = apply_filters('koko_analytics_referrer_blocklist', []);
         foreach ($custom_blocklist as $blocklisted_domain) {
             if (false !== strpos($url, $blocklisted_domain)) {
@@ -215,28 +192,13 @@ class Pageview_Aggregator
             }
         }
 
-        // read built-in blocklist file line-by-line to prevent OOM errors
-        $fh = fopen(KOKO_ANALYTICS_PLUGIN_DIR . '/data/referrer-blocklist', "r");
-        if ($fh) {
-            while (($blocklisted_domain = fgets($fh)) !== false) {
-                // trim newline and other whitespace
-                $blocklisted_domain = rtrim($blocklisted_domain);
-                if ($blocklisted_domain === '') {
-                    continue;
-                }
-
-                // simply check if domain is in referrer string
-                if (false !== strpos($url, $blocklisted_domain)) {
-                    fclose($fh);
-                    return true;
-                }
-            }
-
-            fclose($fh);
+        // check community maintained blocklist
+        if ((new Blocklist())->contains($url)) {
+            return true;
         }
 
         // run return value through filter so user can apply more advanced logic to determine whether to ignore referrer  url
-        // @see https://github.com/ibericode/koko-analytics/blob/master/code-snippets/ignore-some-referrer-traffic-using-regex.php
+        // @see https://github.com/ibericode/koko-analytics/blob/main/code-snippets/ignore-some-referrer-traffic-using-regex.php
         return apply_filters('koko_analytics_ignore_referrer_url', false, $url);
     }
 }

@@ -1,5 +1,81 @@
 # Changelog
 
+
+### 2.2.1 - Feb 02, 2026
+
+- gutenberg: add counter block type
+- tracking: add filter koko_analytics_allowed_query_vars ([example](https://github.com/ibericode/koko-analytics/blob/9a038eacf51f5eded9abc4920bbcd9c792bafc02/code-snippets/allow-query-vars.php))
+- performance: rollup database migrations older than 5 years.
+
+
+### 2.2.0 - Jan 21, 2026
+
+- settings: allow plugins to register their own settings tab through the `koko_analytics_settings_tabs` filter.
+- endpoint: remove duplicate require statements in case several plugins add the same file.
+
+
+### 2.1.3 - Jan 12, 2026
+
+- data export: escape path and referrer url values in data export file. Fixes a potential SQL injection vulnerability when importing a previously exported dataset containing malicious path values (CVE-2026-22850). Thanks to Hector Ruiz from [naxus-audit](https://github.com/naxus-audit) for responsibly disclosing.
+- data import: only allow SQL statements affecting the Koko Analytics database
+tables
+- tracking: reject invalid path values per the RFC 2396 specification
+
+
+### 2.1.2 - Jan 7, 2026
+
+- tracking: accept path and post ID argument in koko_analytics.trackPageview(path, post_id) function to allow manual calls in single-page applications.
+- dashboard: add group by 'year' option to chart
+
+
+### 2.1.1 - Dec 24, 2025
+
+- Use our own notice styles instead of the ones from WP core.
+- Send Cache-Control header on public dashboard.
+- Show some debug info on settings page.
+- Ensure upload directory exists when creating session dir for fingerprint method.
+- Add charset to collection endpoint HTTP response headers.
+- Properly remove tooltip when mouse leaves the chart area.
+- Move placeholder for tables without data outside of table element to fix column span issue.
+- Add X-Robots-Tag: noindex to collection endpoint.
+- Grey out table pagination when a page filter is active.
+- Use fake hyperlinks for date navigation to stop bots from crawling public dashboards until infinity.
+
+
+### 2.1.0 - Dec 08, 2025
+
+- New settings page structure!
+- Use existing removeable query args from WP core for notices.
+
+
+### 2.0.22 - Dec 01, 2025
+
+- specify apiVersion for block type so that WP 6.9 can use new iframe editor.
+
+
+### 2.0.21 - Nov 28, 2025
+
+- Prune blocked referrer domains retro-actively.
+- Fix double echo on settings page.
+- Fix hanging query on certain MySQL installations for deleting orphaned referrer rows.
+- Add `wp koko-analytics prune` command for WP CLI.
+
+
+### 2.0.20 - Nov 14, 2025
+
+- Fix hard-coded table prefix in data export file.
+- Increase batch size during data migration to v2 format from 500 to 1000 rows.
+- Drop temporary table after data migration to v2.
+
+
+### 2.0.19 - Oct 15, 2025
+
+- Print (< 500 bytes) tracking script inline in page HTML to save on an additional HTTP request and resolve overly aggressive cache issues.
+- Add importer for Plausible.
+- Change public dashboard URL to `/koko-analytics-dashboard/` if pretty permalinks are enabled.
+- Exclude visits to post previews.
+
+
 ### 2.0.18 - Sep 24, 2025
 
 - Add filename alias for `Pageview_Aggregator` class so old autoloader knows where to find it. This fixes an error for users upgrading from 1.x with data in the temporary buffer file.

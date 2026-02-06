@@ -18,7 +18,7 @@ function get_settings(): array
         'tracking_method' => 'cookie',
         'exclude_user_roles' => [],
         'exclude_ip_addresses' => [],
-        'prune_data_after_months' => 5 * 12, // 10 years
+        'prune_data_after_months' => 5 * 12,
         'default_view' => 'last_28_days',
         'is_dashboard_public' => 0,
     ];
@@ -120,13 +120,10 @@ function get_most_viewed_posts($args = []): array
  */
 function get_realtime_pageview_count($since = null): int
 {
-    if (is_numeric($since) || is_int($since)) {
+    if (is_numeric($since)) {
         $since = (int) $since;
-    } elseif (is_string($since)) {
-        // $since is relative time string
-        $since = strtotime($since);
     } else {
-        $since = strtotime('-5 minutes');
+        $since = strtotime($since ?? '-5 minutes');
     }
 
     $counts = (array) get_option('koko_analytics_realtime_pageview_count', []);

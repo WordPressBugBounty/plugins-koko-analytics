@@ -8,7 +8,9 @@
 
 namespace KokoAnalytics\Admin;
 
-use KokoAnalytics\Jetpack_Importer;
+use KokoAnalytics\Import\Jetpack_Importer;
+use KokoAnalytics\Import\Plausible_Importer;
+use KokoAnalytics\Router;
 
 class Admin
 {
@@ -18,34 +20,37 @@ class Admin
 
         add_action('admin_notices', [$this, 'show_migrate_to_v2_notice'], 10, 0);
         add_action('admin_menu', [$this, 'register_menu'], 10, 0);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts'], 10, 1);
 
         add_action('koko_analytics_install_optimized_endpoint', [Actions::class, 'install_optimized_endpoint'], 10, 0);
         add_action('koko_analytics_save_settings', [Actions::class, 'save_settings'], 10, 0);
-        add_action('koko_analytics_reset_statistics', [Actions::class, 'reset_statistics'], 10, 0);
-        add_action('koko_analytics_export_data', [Actions::class, 'export_data'], 10, 0);
-        add_action('koko_analytics_import_data', [Actions::class, 'import_data'], 10, 0);
+        add_action('koko_analytics_reset_statistics', [Data_Reset::class, 'action_listener'], 20, 0);
+        add_action('koko_analytics_export_data', [Data_Export::class, 'action_listener'], 10, 0);
+        add_action('koko_analytics_import_data', [Data_Import::class, 'action_listener'], 10, 0);
         add_action('koko_analytics_migrate_post_stats_to_v2', [Actions::class, 'migrate_post_stats_to_v2'], 10, 0);
         add_action('koko_analytics_migrate_referrer_stats_to_v2', [Actions::class, 'migrate_referrer_stats_to_v2'], 10, 0);
+        add_action('koko_analytics_fix_post_paths_after_v2', [Actions::class, 'fix_post_paths_after_v2'], 10, 0);
 
         // Hooks for plugins overview page
         if ($pagenow === 'plugins.php') {
-            $plugin_basename = plugin_basename(KOKO_ANALYTICS_PLUGIN_FILE);
+            $plugin_basename = basename(dirname(KOKO_ANALYTICS_PLUGIN_FILE)) . DIRECTORY_SEPARATOR . basename(KOKO_ANALYTICS_PLUGIN_FILE);
             add_filter('plugin_action_links_' . $plugin_basename, [$this, 'add_plugin_settings_link'], 10, 1);
             add_filter('plugin_row_meta', [$this, 'add_plugin_meta_links'], 10, 2);
         }
 
         // actions for jetpack importer
-        add_action('koko_analytics_show_jetpack_importer_page', [Jetpack_Importer::class, 'show_page'], 10, 0);
         add_action('koko_analytics_start_jetpack_import', [Jetpack_Importer::class, 'start_import'], 10, 0);
         add_action('koko_analytics_jetpack_import_chunk', [Jetpack_Importer::class, 'import_chunk'], 10, 0);
+
+        // actions for plausible importer
+        add_action('koko_analytics_start_plausible_import', [Plausible_Importer::class, 'start_import'], 10, 0);
     }
 
     public function register_menu(): void
     {
-        add_submenu_page('index.php', esc_html__('Koko Analytics', 'koko-analytics'), esc_html__('Analytics', 'koko-analytics'), 'view_koko_analytics', 'koko-analytics', [Pages::class, 'show_page']);
+        add_submenu_page('index.php', 'Koko Analytics', 'Analytics', 'view_koko_analytics', 'koko-analytics', [Pages::class, 'show_dashboard_page']);
+        add_submenu_page('options-general.php', 'Koko Analytics', 'Koko Analytics', 'manage_koko_analytics', 'koko-analytics-settings', [Pages::class, 'show_settings_page']);
     }
-
 
     /**
      * Add the settings link to the Plugins overview
@@ -56,7 +61,7 @@ class Admin
      */
     public function add_plugin_settings_link($links): array
     {
-        $href = admin_url('index.php?page=koko-analytics&tab=settings');
+        $href = admin_url('options-general.php?page=koko-analytics-settings');
         $label = esc_html__('Settings', 'koko-analytics');
         $settings_link = "<a href=\"{$href}\">{$label}</a>";
         array_unshift($links, $settings_link);
@@ -90,7 +95,7 @@ class Admin
 
     public function enqueue_scripts($hook_suffix): void
     {
-        if ($hook_suffix !== 'dashboard_page_koko-analytics') {
+        if ($hook_suffix !== 'dashboard_page_koko-analytics' && $hook_suffix !== 'settings_page_koko-analytics-settings') {
             return;
         }
 
@@ -123,13 +128,14 @@ class Admin
                     <p><button type="submit" class="button button-primary"><?php esc_html_e('Migrate', 'koko-analytics'); ?></button></p>
                 </form>
                 <p class="help description text-muted"><?php esc_html_e('We recommend making a back-up of your Koko Analytics database tables before running the migration.', 'koko-analytics'); ?></p>
+                <p class="help description text-muted"><?php esc_html_e('You can also run the migration using WP CLI: ', 'koko-analytics'); ?> <code>wp koko-analytics migrate_post_stats_to_v2</code></p>
             </div>
             <?php
         }
 
         // Test for unmigrated referrer records
         $results = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE url LIKE 'http://%' OR url LIKE 'https://%'");
-        if ($results && !get_option('koko_analytics_referrers_v2')) {
+        if ($results > 0 && !get_option('koko_analytics_referrers_v2')) {
             ?>
             <div class="notice notice-warning">
                 <p>
