@@ -10,19 +10,7 @@ namespace KokoAnalytics;
 
 class Pruner
 {
-    public static function setup_scheduled_event(): void
-    {
-        if (! wp_next_scheduled('koko_analytics_prune_data')) {
-            wp_schedule_event(time() + DAY_IN_SECONDS, 'daily', 'koko_analytics_prune_data');
-        }
-    }
-
-    public static function clear_scheduled_event(): void
-    {
-        wp_clear_scheduled_hook('koko_analytics_prune_data');
-    }
-
-    public static function run()
+    public function run()
     {
         /** @var \wpdb $wpdb */
         global $wpdb;
@@ -39,12 +27,12 @@ class Pruner
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_post_stats WHERE date < %s", $date));
         $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_stats WHERE date < %s", $date));
 
-        self::delete_orphaned_referrer_urls();
-        self::delete_orphaned_paths();
-        self::delete_blocked_referrers();
+        $this->delete_orphaned_referrer_urls();
+        $this->delete_orphaned_paths();
+        $this->delete_blocked_referrers();
     }
 
-    protected static function delete_orphaned_referrer_urls(): void
+    protected function delete_orphaned_referrer_urls(): void
     {
         /** @var \wpdb $wpdb */
         global $wpdb;
@@ -59,7 +47,7 @@ class Pruner
         }
     }
 
-    protected static function delete_orphaned_paths(): void
+    protected function delete_orphaned_paths(): void
     {
         /** @var \wpdb $wpdb */
         global $wpdb;
@@ -73,7 +61,7 @@ class Pruner
         }
     }
 
-    protected static function delete_blocked_referrers(): void
+    protected function delete_blocked_referrers(): void
     {
         global $wpdb;
 

@@ -18,13 +18,7 @@ delete_option("koko_analytics_settings");
 delete_option("koko_analytics_use_custom_endpoint");
 delete_option("koko_analytics_realtime_pageview_count");
 delete_option('koko_analytics_jetpack_import_params');
+delete_option('koko_analytics_last_aggregation_at');
 
-// delete historical data?
-//
-// global $wpdb;
-// delete_option("koko_analytics_version");
-// $wpdb->query("DROP TABLE {$wpdb->prefix}koko_analytics_site_stats;");
-// $wpdb->query("DROP TABLE {$wpdb->prefix}koko_analytics_post_stats;");
-// $wpdb->query("DROP TABLE {$wpdb->prefix}koko_analytics_paths;");
-// $wpdb->query("DROP TABLE {$wpdb->prefix}koko_analytics_referrer_stats;");
-// $wpdb->query("DROP TABLE {$wpdb->prefix}koko_analytics_referrer_urls;");
+// not removing koko_analytics_version because the database tables itself are not removed upon uninstall
+// not removing koko_analytics_referrers_v2 because it also describes database state

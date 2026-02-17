@@ -8,20 +8,67 @@
 
 namespace KokoAnalytics\Admin;
 
+use KokoAnalytics\Cron;
 use KokoAnalytics\Endpoint_Installer;
-use KokoAnalytics\Data_Exporter;
-use KokoAnalytics\Data_Importer;
 use KokoAnalytics\Fingerprinter;
+use KokoAnalytics\Import\Jetpack_Importer;
+use KokoAnalytics\Import\Plausible_Importer;
 use KokoAnalytics\Normalizers\Normalizer;
 use KokoAnalytics\Path_Repository;
 
 use function KokoAnalytics\get_settings;
+use function KokoAnalytics\lazy;
 
 class Actions
 {
-    public static function install_optimized_endpoint(): void
+    // TODO: Add nonce verification to all mapped actions so that we can remove this from callbacks
+    public function run()
     {
-        $result = Endpoint_Installer::install();
+        if (isset($_GET['koko_analytics_action'])) {
+            $action = trim($_GET['koko_analytics_action']);
+        } elseif (isset($_POST['koko_analytics_action'])) {
+            $action = trim($_POST['koko_analytics_action']);
+        } else {
+            return;
+        }
+
+        if (!current_user_can('manage_koko_analytics')) {
+            return;
+        }
+
+        // TODO: Allow plugins to hook into this to register their own actions
+        // TODO: Use light callback methods in this class with the main lifting done in instance methods on decoupled classes
+        // TODO: Do all HTTP manipulation in this class so we can re-use the other classes in WP_CLI etc.
+        $map = [
+            'install_optimized_endpoint' => [$this, 'install_optimized_endpoint'],
+            'save_settings' => [$this, 'save_settings'],
+            'migrate_post_stats_to_v2' => [$this, 'migrate_post_stats_to_v2'],
+            'migrate_referrer_stats_to_v2' => [$this, 'migrate_referrer_stats_to_v2'],
+            'fix_post_paths_after_v2' => [$this, 'fix_post_paths_after_v2'],
+            'reset_statistics' => lazy(Data_Reset::class, 'action_listener'),
+            'import_data' => lazy(Data_Import::class, 'action_listener'),
+            'export_data' => lazy(Data_Export::class, 'action_listener'),
+            'start_jetpack_import' => lazy(Jetpack_Importer::class, 'start_import'),
+            'jetpack_import_chunk' => lazy(Jetpack_Importer::class, 'import_chunk'),
+            'start_plausible_import' => lazy(Plausible_Importer::class, 'start_import'),
+        ];
+
+        // for BC reasons, still fire the action hook
+        // it is important we fire it before running the registered callback
+        // because that way we can initiate a redirect from our own callback
+        do_action("koko_analytics_{$action}");
+
+        if (isset($map[$action])) {
+            call_user_func($map[$action]);
+        }
+
+        wp_safe_redirect(remove_query_arg('koko_analytics_action'));
+        exit;
+    }
+
+    public function install_optimized_endpoint()
+    {
+        $result = (new Endpoint_Installer())->install();
         if ($result !== true) {
             wp_safe_redirect(add_query_arg(['error' => urlencode($result)], wp_get_referer()));
         } else {
@@ -30,7 +77,7 @@ class Actions
         exit;
     }
 
-    public static function save_settings(): void
+    public function save_settings()
     {
         if (!current_user_can('manage_koko_analytics') || ! check_admin_referer('koko_analytics_save_settings') || ! isset($_POST['koko_analytics_settings'])) {
             return;
@@ -38,11 +85,6 @@ class Actions
 
         // merge posted data with saved data to allow for partial updates
         $settings = array_merge(get_settings(), $_POST['koko_analytics_settings']);
-
-        // get rid of deprecated setting keys
-        // TODO: Maybe whitelist default settings here and remove every non-default key?
-        unset($settings['use_cookie']);
-
         $settings['exclude_ip_addresses'] = is_array($settings['exclude_ip_addresses']) ? $settings['exclude_ip_addresses'] : explode(PHP_EOL, str_replace(',', PHP_EOL, strip_tags($settings['exclude_ip_addresses'])));
         $settings['exclude_ip_addresses']    = array_filter(array_map('trim', $settings['exclude_ip_addresses']));
 
@@ -54,20 +96,24 @@ class Actions
         $settings = apply_filters('koko_analytics_sanitize_settings', $settings, $settings);
         update_option('koko_analytics_settings', $settings, true);
 
+        do_action('koko_analytics_settings_updated', $settings);
+
+        // ensure cron events are scheduled correctly
+        (new Cron())->setup();
+
         // maybe create sessions directory & initial seed file
         if ($settings['tracking_method'] === 'fingerprint') {
-            Fingerprinter::create_storage_dir();
-            Fingerprinter::setup_scheduled_event();
+            (new Fingerprinter())->create_storage_dir();
         }
 
         // Re-create optimized endpoint to ensure its contents are up-to-date
-        Endpoint_Installer::install();
+        (new Endpoint_Installer())->install();
 
         wp_safe_redirect(add_query_arg(['settings-updated' => 1], wp_get_referer()));
         exit;
     }
 
-    public static function migrate_post_stats_to_v2(): void
+    public function migrate_post_stats_to_v2()
     {
         @set_time_limit(0);
 
@@ -87,7 +133,7 @@ class Actions
             // create a mapping of post_id => path
             $post_id_to_path_map = [];
             foreach ($results as $r) {
-                $post_id_to_path_map["{$r->post_id}"] = self::get_path_by_post_id($r->post_id);
+                $post_id_to_path_map["{$r->post_id}"] = $this->get_path_by_post_id($r->post_id);
             }
 
             // bulk insert all paths
@@ -96,7 +142,7 @@ class Actions
             // update post_stats table to point to paths we just inserted
             foreach ($post_id_to_path_map as $post_id => $path) {
                 $path_id = $path_to_path_id_map[$path];
-                $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_post_stats SET path_id = %d WHERE post_id = %d", [ $path_id, $post_id ]));
+                $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_post_stats SET path_id = %d WHERE post_id = %d", [$path_id, $post_id]));
             }
         } while (true);
 
@@ -117,7 +163,7 @@ class Actions
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}koko_analytics_post_stats_old");
     }
 
-    public static function migrate_referrer_stats_to_v2(): void
+    public function migrate_referrer_stats_to_v2()
     {
         @set_time_limit(0);
 
@@ -141,8 +187,8 @@ class Actions
 
                 //  if row is seriously malformed, delete it
                 if ($row->url === '') {
-                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_stats WHERE id = %d", [ $row->id ]));
-                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE id = %d", [ $row->id ]));
+                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_stats WHERE id = %d", [$row->id]));
+                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE id = %d", [$row->id]));
                     continue;
                 }
 
@@ -160,14 +206,14 @@ class Actions
                     }
 
                     // try to update all rows to new id (this will fail for some rows)
-                    $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_referrer_stats SET id = %d WHERE id = %d", [ $id, $row->id ]));
+                    $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_referrer_stats SET id = %d WHERE id = %d", [$id, $row->id]));
 
                     // delete rows that still have old ID at this point
-                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_stats WHERE id = %d", [ $row->id ]));
-                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE id = %d", [ $row->id ]));
+                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_stats WHERE id = %d", [$row->id]));
+                    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}koko_analytics_referrer_urls WHERE id = %d", [$row->id]));
                 } else {
                     // otherwise change entry to normalized version
-                    $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_referrer_urls SET url = %s WHERE id = %d", [ $row->url, $row->id ]));
+                    $wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}koko_analytics_referrer_urls SET url = %s WHERE id = %d", [$row->url, $row->id]));
                 }
             }
         } while ($results);
@@ -179,7 +225,7 @@ class Actions
      * Between version 2.0 and 2.0.10, there was an issue with the migration script above which would result in incorrect path ID's being returned when bulk inserting new paths.
      * This fixes every entry in the post_stats table by checking each path whether it is correct
      */
-    public static function fix_post_paths_after_v2(): void
+    public function fix_post_paths_after_v2()
     {
         @set_time_limit(0);
 
@@ -197,7 +243,7 @@ class Actions
             }
 
             foreach ($results as $r) {
-                $correct_path = self::get_path_by_post_id($r->post_id);
+                $correct_path = $this->get_path_by_post_id($r->post_id);
                 if ($r->path != $correct_path) {
                     // get correct path id
                     $path_to_id_map = Path_Repository::upsert([$correct_path]);
@@ -210,7 +256,7 @@ class Actions
         } while (true);
     }
 
-    private static function get_path_by_post_id($post_id)
+    private function get_path_by_post_id($post_id)
     {
         $home_url = home_url('/');
         $post_permalink = $post_id ? get_permalink($post_id) : $home_url;
