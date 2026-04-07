@@ -15,7 +15,7 @@ class Controller
         add_action('init', [$this, 'action_init'], 10, 0);
         add_action('wp_loaded', [$this, 'action_wp_loaded'], 10, 0);
         add_action('wp', [$this, 'action_wp'], 10, 0);
-        add_action('widgets_init', [$this, 'action_widgets_init']);
+        add_action('widgets_init', [$this, 'action_widgets_init'], 10, 0);
 
         add_filter('cron_schedules', [$this, 'filter_cron_schedules'], 10, 1);
         add_action('rest_api_init', lazy(Rest::class, 'action_rest_api_init'), 10, 0);
@@ -29,15 +29,7 @@ class Controller
 
     public function action_wp_loaded(): void
     {
-        // Bring users on older versions up to the last semver-based migration (2.2.6.3)
-        $old_db_version = (string) get_option('koko_analytics_version', '');
-        if ($old_db_version) {
-            $this->update_migration_version($old_db_version);
-        }
-
-        // Run integer-based migrations going forward
-        $m = new Migrations_v2(KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/', 'koko_analytics_migrations');
-        $m->run();
+        $this->run_pending_database_migrations();
     }
 
     public function action_init(): void
@@ -110,8 +102,22 @@ class Controller
         (new Dashboard_Public())->show();
     }
 
+    public function run_pending_database_migrations(): void
+    {
+        // Bring users on older versions up to the last semver-based migration (2.2.6.3)
+        $old_db_version = (string) get_option('koko_analytics_version', '');
+        if ($old_db_version) {
+            $this->update_migration_version($old_db_version);
+        }
+
+        // Run integer-based migrations going forward
+        $m = new Migrations_v2(KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/', 'koko_analytics_migrations');
+        $m->run();
+    }
+
     protected function update_migration_version(string $old_db_version): void
     {
+
         // set numeric version based on old semver version, so we can run new integer-based migrations
         $map = [
             '1.0.0' => 1,
@@ -135,7 +141,12 @@ class Controller
             }
         }
 
-        update_option('koko_analytics_migrations', $new_db_version, true);
+        // only update koko_analytics_migrations if not already set
+        // this prevents potentially re-running the migrations a bunch of times
+        if (get_option('koko_analytics_migrations') !== false) {
+            update_option('koko_analytics_migrations', $new_db_version, true);
+        }
+
         delete_option('koko_analytics_version');
     }
 }
