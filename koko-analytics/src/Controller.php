@@ -15,7 +15,7 @@ class Controller
         add_action('init', [$this, 'action_init'], 10, 0);
         add_action('wp_loaded', [$this, 'action_wp_loaded'], 10, 0);
         add_action('wp', [$this, 'action_wp'], 10, 0);
-        add_action('widgets_init', [$this, 'action_widgets_init'], 10, 0);
+        add_action('widgets_init', [$this, 'action_widgets_init']);
 
         add_filter('cron_schedules', [$this, 'filter_cron_schedules'], 10, 1);
         add_action('rest_api_init', lazy(Rest::class, 'action_rest_api_init'), 10, 0);
@@ -29,9 +29,15 @@ class Controller
 
     public function action_wp_loaded(): void
     {
-        // Maybe run any pending database migrations
-        $migrations = new Migrations('koko_analytics', KOKO_ANALYTICS_VERSION, KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/');
-        $migrations->maybe_run();
+        // Bring users on older versions up to the last semver-based migration (2.2.6.3)
+        $old_db_version = (string) get_option('koko_analytics_version', '');
+        if ($old_db_version) {
+            $this->update_migration_version($old_db_version);
+        }
+
+        // Run integer-based migrations going forward
+        $m = new Migrations_v2(KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/', 'koko_analytics_migrations');
+        $m->run();
     }
 
     public function action_init(): void
@@ -102,5 +108,34 @@ class Controller
         }
 
         (new Dashboard_Public())->show();
+    }
+
+    protected function update_migration_version(string $old_db_version): void
+    {
+        // set numeric version based on old semver version, so we can run new integer-based migrations
+        $map = [
+            '1.0.0' => 1,
+            '1.3.12' => 2,
+            '1.6.3' => 3,
+            '1.7.0' => 4,
+            '1.8.0' => 5,
+            '1.8.5' => 6,
+            '1.9.991' => 7,
+            '1.9.992' => 8,
+            '2.0.12' => 9,
+            '2.0.13' => 10,
+            '2.0.20' => 11,
+            '2.2.5' => 12,
+        ];
+
+        $new_db_version = 0;
+        foreach ($map as $semver => $numeric) {
+            if (version_compare($old_db_version, $semver, '>=')) {
+                $new_db_version = $numeric;
+            }
+        }
+
+        update_option('koko_analytics_migrations', $new_db_version, true);
+        delete_option('koko_analytics_version');
     }
 }

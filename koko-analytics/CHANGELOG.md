@@ -1,5 +1,20 @@
 # Changelog
 
+### 2.3.0 - Apr 7, 2026
+
+- tracking: improved detection of preflight requests and requests from headless browsers. 
+- tracking: add more aggregation rules for google subdomains
+- database: improved migration runner for more reliable database migrations
+- database: use atomic upsert for upserting normalized string values (like paths and referrer urls).
+- database: improved performance for pruning action.
+- shortcode: fix koko_analytics_counter sometimes not working properly when used outside of post content.
+- shortcode: format output of koko_analytics_counter shortcode according to localized number formatting rules.
+- settings: restrict tab query parameter to whitelisted values only
+- ux: allow a custom order of your dashboard components through drag and drop.
+- ux: add direct link to page in the top pages component.
+- ux: styling improvements to the dashboard.
+- dev: add filter koko_analytics_print_html_comments to disable HTML comments with version info.
+
 
 ### 2.2.5 - Mar 18, 2026
 
@@ -13,7 +28,7 @@
 ### 2.2.4 - Feb 17, 2026
 
 - Fix fatal error on fresh plugin installation because of calling non-static method statically.
-- Fix `[koko_analytics_counter] shortcode no longer working in version 2.2.2 because of lacking function arguments.
+- Fix `[koko_analytics_counter]` shortcode no longer working in version 2.2.2 because of lacking function arguments.
 
 
 ### 2.2.2 - Feb 17, 2026

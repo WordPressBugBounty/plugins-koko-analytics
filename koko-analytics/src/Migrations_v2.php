@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * @package koko-analytics
+ * @license GPL-3.0+
+ * @author Danny van Kooten
+ */
+
+namespace KokoAnalytics;
+
+class Migrations_v2
+{
+    protected string $directory;
+    protected string $option_name;
+
+    /**
+     * @param string $directory Directory where migration files are located.
+     * @param string $option_name Name of the option where the current migration version is stored.
+     */
+    public function __construct(
+        string $directory,
+        string $option_name
+    ) {
+        $this->directory = rtrim($directory, '/');
+        $this->option_name = $option_name;
+    }
+
+    public function get_pending(): array
+    {
+        $version_from = (int) get_option($this->option_name, 0);
+        $files = scandir($this->directory, SCANDIR_SORT_ASCENDING);
+        if ($files === false || count($files) === 0) {
+            return [];
+        }
+
+        return array_values(array_filter($files, function ($file) use ($version_from) {
+            if (! preg_match('/^(\d+)\-[a-zA-Z0-9_\-]+\.php$/', $file, $matches)) {
+                return false;
+            }
+            $version = (int) $matches[1];
+            return $version > $version_from;
+        }));
+    }
+
+    public function acquire_lock(): bool
+    {
+        $transient_key = "{$this->option_name}_lock";
+        $transient_timeout = 60;
+
+        // return false if a lock is already active
+        $previous_run_start = (int) get_transient($transient_key);
+        if ($previous_run_start > time() - $transient_timeout) {
+            return false;
+        }
+
+        set_transient($transient_key, time(), $transient_timeout);
+        return true;
+    }
+
+    public function release_lock(): void
+    {
+        $transient_key = "{$this->option_name}_lock";
+        delete_transient($transient_key);
+    }
+
+    public function run(): void
+    {
+        $pending = $this->get_pending();
+        if (count($pending) === 0) {
+            return;
+        }
+
+        if (! $this->acquire_lock()) {
+            return;
+        }
+
+        foreach ($pending as $file) {
+            $this->execute($file);
+        }
+
+        $this->release_lock();
+    }
+
+    /**
+     * @param string $file Filename of the migration to execute, relative to the migrations directory.
+     */
+    protected function execute(string $file): void
+    {
+        include $this->directory . DIRECTORY_SEPARATOR . $file;
+
+        // extract version from filename and update option
+        // we explicitly do this after each individual migration
+        // so that if executing multiple migrations fails halfway through
+        // so that the next time we run, it continues from the last successful migration instead of starting over
+        $version = (int) $file;
+        update_option($this->option_name, $version, true);
+    }
+}
