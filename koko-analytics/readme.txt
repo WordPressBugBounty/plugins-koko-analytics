@@ -1,9 +1,9 @@
 === Koko Analytics - Privacy Friendly Statistics for WordPress ===
 Contributors: Ibericode, DvanKooten, kokoanalytics
 Tags: analytics, google analytics, statistics, stats, privacy
-Requires at least: 6.5
+Requires at least: 6.0
 Tested up to: 6.9.4
-Stable tag: 2.3.3
+Stable tag: 2.3.4
 License: GPL-3.0-or-later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -55,9 +55,9 @@ Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-sou
 
 - See what countries your site is visited from with geo-location statistics.
 - See what browsers, operating systems or devices your visitors are using.
-- Custom event analytics to track outbound link clicks, contact form submissions, and more.
+- Track custom events like outbound link clicks, contact form submissions, add to cart, and more.
 - Stay up-to-date with periodic analytics reports delivered to your email inbox.
-- Be notified immediately whenever your site experiences an unusual traffic spike.
+- Be notified of traffic spikes over email.
 
 You will have access to all of these benefits and more for a small yearly fee. 
 
@@ -79,68 +79,71 @@ View your website analytics under **WP Admin > Dashboard > Analytics**.
 
 == Frequently Asked Questions ==
 
-For more information, visit the [Koko Analytics website](https://www.kokoanalytics.com/) or check out our [documentation](https://www.kokoanalytics.com/kb/).
+If your question is not listed here, take a look at the [Koko Analytics documentation](https://www.kokoanalytics.com/docs/) on our site.
 
 #### Does Koko Analytics set any cookies?
 
-By default it does, but you can disable the use of cookies in the settings.
+The use of cookies in Koko Analytics is optional.
 
-If using cookies, Koko Analytics sets a single `_koko_analytics_pages_viewed` cookie (max 24h lifetime) to detect unique visitors without storing personal data.
-
-More info: [Does Koko Analytics use cookies?](https://www.kokoanalytics.com/kb/does-koko-analytics-use-cookies/)
+Read more here: [Does Koko Analytics use cookies?](https://www.kokoanalytics.com/docs/faq/does-koko-analytics-use-cookies/)
 
 #### Will using Koko Analytics slow down my site?
 
-Koko Analytics is built to be very high performance.
+No. 
 
-- It only adds a single script of less than 500 bytes to your pages.
-- Data is collected using an optimized tracking endpoint which bypasses WordPress entirely.
-
-The performance impact for your visitors will be as close to zero as technically possible.
+Koko Analytics does what it does in the most efficient way possible. Site speed will not be affected in any way.
 
 #### Is Koko Analytics privacy-friendly?
 
-Yes.
+Absolutely.
 
 - No personal data is processed or stored.
-- Visitors are not tracked across pages or sites.
-- Only aggregated counts are stored, nothing that could identify a single visitor.
 - No third-party services are involved.
+- Nothing that could identify a single visitor is stored, only aggregated counts.
 
 #### Is Koko Analytics open-source?
 
-Yes. Koko Analytics is released under the GPL license.
+Yes. 
 
-#### Is Koko Analytics free?
+Koko Analytics is released under the GPL license.
 
-Yes. Koko Analytics is a free plugin that you can install on your site without requiring any third-party services.
+#### Do I need an account?
 
-Some more advanced features are bundled in [Koko Analytics Pro](https://www.kokoanalytics.com/pricing/), which you can purchase for a small yearly fee.
+No. 
 
-### How does Koko Analytics compare to Google Analytics?
+Koko Analytics runs entirely on your own site, no third party services are involved. You install the plugin and stats will start recording right away.
 
-Unlike Google Analytics, Koko Analytics runs entirely on your own server and does not send any data to third parties. There is no complex setup, no JavaScript loaded from external domains, and no consent banner required. You get simple, accurate statistics for your WordPress site while fully respecting your visitors' privacy.
+#### Does Koko Analytics work with pages served from caches?
 
-#### Can I see statistics for individual pages?
+Yes. 
 
-Yes. Koko Analytics uses path-based tracking, so you can view analytics for any URL on your site - including category archives, search result pages, and custom post types. Click any page in the dashboard to filter the chart and totals to that specific page.
-
-#### Does Koko Analytics work with caching plugins?
-
-Yes. Koko Analytics is fully compatible with all WordPress caching plugins and server-side caches. Data is collected through a dedicated endpoint that bypasses WordPress entirely, so your cache is never invalidated and your statistics remain accurate regardless of your caching setup.
+Koko Analytics is fully compatible with all sorts of caches.
 
 
 == Screenshots ==
 
-1. Dashboard view of your website statistics.
-2. Dashboard widget with last 2 weeks of visits.
-3. Widget showing most viewed posts for a time period.
-4. Settings page with user role exclusion options.
-5. Settings page with Pro features.
-6. Pro feature showing pageviews in the posts overview.
-
+1. A good looking analytics dashboard right inside your WordPress admin
+2. View analytics over the past 2 weeks directly after logging in
+3. Configure all tracking related settings.
+4. Customize what your analytics dashboard looks like.
+5. Register custom events for tailored analytics. [Pro]
+6. Configure periodic email reports or traffic spike notification. [Pro]
+7. You own your data. Export or import at will.
+8. Show your most viewed posts in a widget.
+9. See exactly where your website is visited from or what browsers, operating system or devices your visitors are using. [Pro]
 
 == Changelog ==
+
+
+### 2.3.4 - Apr 20, 2026
+
+- fix: access to Jetpack and Plausible importer pages.
+- fix: database warning because of unexisting table on fresh installs.
+- ux: table rows selectable again.
+- seo: remove canonical URL from public dashboard (because it is already noindex).
+- database: change default database purge treshold to 3 years (down from 5).
+- dashboard: don't listen to query string argument for public dashboard if pretty permalinks are enabled.
+
 
 ### 2.3.3 - Apr 8, 2026
 
@@ -425,7 +428,7 @@ This release introduces path based tracking and improved dashboard styles. If yo
 
 #### 1.8.0 - Jun 12, 2025
 
-- Added a new tracking method: [cookieless tracking](https://www.kokoanalytics.com/kb/cookie-vs-cookieless-tracking-methods).
+- Added a new tracking method: [cookieless tracking](https://www.kokoanalytics.com/docs/tracking/cookie-vs-cookieless-tracking-methods/).
 - If using cookie-based tracking, the cookie lifetime has been changed to expire at midnight (so a maximum of 24 hours).
 - Simplified client-side tracking script so it's now smaller than 500 bytes.
 - Excluded IP addresses now work properly with the optimized endpoint.
@@ -524,10 +527,6 @@ This release introduces path based tracking and improved dashboard styles. If yo
 - Fix undefined array key notice introduced in version 1.5.5.
 - Make all strings from Jetpack Importer feature translatable. Thanks to [Alex Lion](https://alexclassroom.com/).
 - Fix REST API routes returning a HTTP 500 error if called without a `start_date` parameter.
-
-PS. We've started the works on a [standalone version of Koko Analytics](https://github.com/koko-analytics/koko-analytics/) that allows you to track non-WordPress sites.
-
-You can read some more about it on Danny's personal blog: https://www.dannyvankooten.com/blog/2025/building-privacy-friendly-website-analytics/
 
 
 #### 1.5.5 - Jan 10, 2025
@@ -727,7 +726,7 @@ Reverting this change from version 1.5.2 fixes an issue with the optimized endpo
 - Fix arrow-key or arrow-icon navigation when viewing a single day of data.
 - Automatically refresh dashboard data every 60s.
 - Improve dashboard widget by showing a summary of today.
-- Added filter hook `koko_analytics_dashboard_widget_number_of_top_items` to [modify or disable the top pages and referrers in the dashboard widget](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/modify-dashboard-widget/README.md).
+- Added filter hook `koko_analytics_dashboard_widget_number_of_top_items` to [modify or disable the top pages and referrers in the dashboard widget](https://github.com/ibericode/koko-analytics/blob/main/code-snippets/modify-dashboard-widget/README.md).
 - The `[koko_analytics_most_viewed_posts]` shortcode now shows a debug message if the arguments did not lead to any results.
 
 
@@ -736,7 +735,7 @@ Reverting this change from version 1.5.2 fixes an issue with the optimized endpo
 - Fix new visitors not being counted.
 - Fix dashboard issues for users with a large UTC timezone offset.
 - Fix date format in chart component if grouping by month.
-- Revert to blue colors for the chart. If you want your chart to use different colors, please see this [example code snippet on how to change colors](https://github.com/ibericode/koko-analytics/blob/master/code-snippets/change-chart-colors.php).
+- Revert to blue colors for the chart. If you want your chart to use different colors, please see this [example code snippet on how to change colors](https://github.com/ibericode/koko-analytics/blob/main/code-snippets/change-chart-colors.php).
 - Change dashboard widget to show just a quick summary of today.
 - Show some feedback after using the "create optimized endpoint" button.
 
@@ -779,9 +778,5 @@ Reverting this change from version 1.5.2 fixes an issue with the optimized endpo
 - Fix chart tooltips not showing on WordPress dashboard.
 - Minor performance improvements for aggregation process.
 - Move seed (sample data) function out of the core plugin.
-- Add message about checking browser console for error message in case the dashboard doesn't boot up.
-- Format dates in dashboard using `Intl.DateTimeFormat` in browser, if available.
-- Remove Pikaday datepicker in favor of native `<input type="date">` elements.
-- Improve mobile view of datepicker dropdown.
-- Exclude (fixed page) ...
+- Add message about checking browser console for ...
 
