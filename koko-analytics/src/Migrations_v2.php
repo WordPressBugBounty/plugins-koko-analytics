@@ -72,15 +72,21 @@ class Migrations_v2
         delete_transient($transient_key);
     }
 
-    public function run(): void
+    /**
+     * Potentially runs all pending database migrations.
+     * Only returns true if database is at current version.
+     *
+     * @return bool
+     */
+    public function ensure_current(): bool
     {
         $pending = $this->get_pending();
         if (count($pending) === 0) {
-            return;
+            return true;
         }
 
         if (! $this->acquire_lock()) {
-            return;
+            return false;
         }
 
         // try to increase time limit to 5 minutes
@@ -93,9 +99,12 @@ class Migrations_v2
             }
         } catch (Throwable $e) {
             error_log("Koko Analytics: error running database migrations. " . (string) $e);
+            return false;
+        } finally {
+            $this->release_lock();
         }
 
-        $this->release_lock();
+        return count($this->get_pending()) === 0;
     }
 
     /**

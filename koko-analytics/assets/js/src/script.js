@@ -25,14 +25,12 @@ ka.trackPageview = function(path, post_id) {
   }));
 };
 
-// autotrack pageview on page load, but only if the page is visible (e.g. not in a background tab)
-// we also track if the page becomes visible later (e.g. user switches to the tab), but only once per page load
-let autotracked = false;
-const autotrack = () => {
-  if (! autotracked && document.visibilityState === 'visible') {
+// Track page immediately, including when opened in a background tab.
+ka.trackPageview(ka.path, ka.post_id);
+
+// Track pageviews for pages restored from bfcache
+window.addEventListener('pageshow', (evt) => {
+  if (evt.persisted) {
     ka.trackPageview(ka.path, ka.post_id);
-    autotracked = true;
   }
-}
-document.addEventListener("visibilitychange", autotrack);
-window.addEventListener('load',autotrack);
+});

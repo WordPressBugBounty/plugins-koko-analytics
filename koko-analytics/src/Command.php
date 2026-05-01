@@ -8,7 +8,6 @@
 
 namespace KokoAnalytics;
 
-use KokoAnalytics\Admin\Actions;
 use WP_CLI;
 
 class Command
@@ -26,7 +25,7 @@ class Command
     public function aggregate($args, $assoc_args)
     {
         WP_CLI::line('Aggregating data...');
-        (new Aggregator())->run();
+        (new Controller())->aggregate_stats();
         WP_CLI::success('Data aggregated');
     }
 
@@ -47,7 +46,7 @@ class Command
     public function migrate_post_stats_to_v2($args, $assoc_args)
     {
         WP_CLI::line('Migrating post stats...');
-        (new Actions())->migrate_post_stats_to_v2();
+        (new Post_Stats_Migrator())->migrate_to_v2();
         WP_CLI::success('Post stats migrated');
     }
 
@@ -57,7 +56,11 @@ class Command
     public function run_database_migrations(): void
     {
         $c = new Controller();
-        $c->run_pending_database_migrations();
-        WP_CLI::success('Database fully migrated');
+        if ($c->ensure_database_ready()) {
+            WP_CLI::success('Database fully migrated');
+            return;
+        }
+
+        WP_CLI::warning('Database migrations did not complete in this request. They may already be running elsewhere.');
     }
 }
