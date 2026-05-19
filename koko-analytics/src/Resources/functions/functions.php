@@ -10,6 +10,10 @@ namespace KokoAnalytics;
 
 use WP_Query;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 /**
  * Returns a closure that instantiates the class and calls the given method when called
  *
@@ -22,6 +26,16 @@ function lazy($class, $method)
     return function () use ($class, $method) {
         return call_user_func_array([new $class(), $method], func_get_args());
     };
+}
+
+function get_migrations(): Migrations_v2
+{
+    return new Migrations_v2(KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/', 'koko_analytics_migrations');
+}
+
+function get_database_stats(): Database_Stats
+{
+    return new Database_Stats();
 }
 
 function get_settings(): array

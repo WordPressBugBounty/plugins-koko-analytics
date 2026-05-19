@@ -7,6 +7,10 @@ use KokoAnalytics\Shortcodes\Shortcode_Site_Counter;
 use KokoAnalytics\Widgets\Most_Viewed_Posts_Widget;
 use WP_Admin_Bar;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 class Controller
 {
     public function hook(): void
@@ -130,7 +134,7 @@ class Controller
         }
 
         // Run integer-based migrations going forward
-        $m = new Migrations_v2(KOKO_ANALYTICS_PLUGIN_DIR . '/migrations/', 'koko_analytics_migrations');
+        $m = get_migrations();
         return $m->ensure_current();
     }
 

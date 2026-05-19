@@ -10,12 +10,16 @@ namespace KokoAnalytics;
 
 use KokoAnalytics\Normalizers\Path;
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 class Script_Loader
 {
     // WARNING: is used in Koko Analytics Pro (in its static form)
     public static function get_request_path(): string
     {
-        return Path::normalize($_SERVER["REQUEST_URI"] ?? '');
+        return Path::normalize($_SERVER["REQUEST_URI"] ?? '/');
     }
 
     public function hook(): void

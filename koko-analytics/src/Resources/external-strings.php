@@ -1023,7 +1023,7 @@ __('You do not have sufficient permissions to perform this action.', 'koko-analy
 __('Disconnected successfully.', 'koko-analytics');
 
 // ../koko-analytics-pro/src/Licensing/AdminController.php#136
-__('You need to <a href="%1s">activate Koko Analytics Pro</a> to use its features or install plugin updates.', 'koko-analytics');
+__('You need to <a href="%1$s">activate Koko Analytics Pro</a> to use its features or install plugin updates.', 'koko-analytics');
 
 // ../koko-analytics-pro/src/Licensing/AdminController.php#149
 __('Success! You now have full access to Koko Analytics Pro.', 'koko-analytics');
