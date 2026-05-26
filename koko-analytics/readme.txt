@@ -3,7 +3,7 @@ Contributors: Ibericode, DvanKooten, kokoanalytics
 Tags: analytics, google analytics, privacy, statistics, website statistics
 Requires at least: 6.0
 Tested up to: 7.0
-Stable tag: 2.3.6
+Stable tag: 2.3.7
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -22,19 +22,19 @@ It is also built for speed. Koko Analytics adds less than 1 KB to your HTML, wor
 
 = Privacy-friendly analytics =
 
-Koko Analytics is [privacy-friendly analytics](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/) for WordPress. No personal data is processed or stored, all measurements are anonymous, and nothing is shared with a third-party analytics platform.
+Koko Analytics is [privacy-friendly analytics](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) for WordPress. No personal data is processed or stored, all measurements are anonymous, and nothing is shared with a third-party analytics platform.
 
 = Lightweight website statistics =
 
-Koko Analytics is [lightweight analytics](https://www.kokoanalytics.com/lightweight-wordpress-analytics/). It adds less than 1 kilobyte of data to your HTML and is fully compatible with pages served from any kind of cache. WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
+Koko Analytics is [lightweight analytics](https://www.kokoanalytics.com/lightweight-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). It adds less than 1 kilobyte of data to your HTML and is fully compatible with pages served from any kind of cache. WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
 
 = A simple analytics dashboard =
 
-Koko Analytics is [simple analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/). There are no complicated reports to dig through. One dashboard page shows your important website statistics.
+Koko Analytics is [simple analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). There are no complicated reports to dig through. One dashboard page shows your important website statistics.
 
 = Open source analytics =
 
-Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-source-wordpress-analytics/) released under the GPL license, just like WordPress itself. It is built in the open, so anyone can verify how it works. No company can lock you in or take your analytics data away.
+Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-source-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) released under the GPL license, just like WordPress itself. It is built in the open, so anyone can verify how it works. No company can lock you in or take your analytics data away.
 
 == Features ==
 
@@ -59,7 +59,7 @@ Koko Analytics Pro adds more reporting options for sites that need deeper analyt
 * **Email reports** - Receive periodic analytics reports in your inbox.
 * **Traffic spike alerts** - Get notified by email when traffic changes quickly.
 
-[View the Koko Analytics live demo](https://www.kokoanalytics.com/koko-analytics-dashboard/) or [see Koko Analytics Pro pricing](https://www.kokoanalytics.com/pricing/).
+[View the Koko Analytics live demo](https://www.kokoanalytics.com/koko-analytics-dashboard/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) or [see Koko Analytics Pro pricing](https://www.kokoanalytics.com/pricing/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin).
 
 == Installation ==
 
@@ -78,7 +78,7 @@ Yes. Koko Analytics is a WordPress analytics plugin that shows pageviews, visito
 
 = Does Koko Analytics use cookies? =
 
-Cookies are optional in Koko Analytics. You can use the plugin without cookies for privacy-friendly website statistics. Read more in the guide: [Does Koko Analytics use cookies?](https://www.kokoanalytics.com/docs/faq/does-koko-analytics-use-cookies/)
+Cookies are optional in Koko Analytics. You can use the plugin without cookies for privacy-friendly website statistics. Read more in the guide: [Does Koko Analytics use cookies?](https://www.kokoanalytics.com/docs/faq/does-koko-analytics-use-cookies/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin)
 
 = Will Koko Analytics slow down my site? =
 
@@ -100,7 +100,7 @@ No account is needed. Koko Analytics runs on your own WordPress site, and statis
 
 Yes. Koko Analytics is compatible with pages served from many types of cache.
 
-If your question is not listed here, read the [Koko Analytics documentation](https://www.kokoanalytics.com/docs/).
+If your question is not listed here, read the [Koko Analytics documentation](https://www.kokoanalytics.com/docs/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin).
 
 == Screenshots ==
 
@@ -115,6 +115,19 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 9. Country, browser, operating system, and device statistics for deeper website analytics. [Pro]
 
 == Changelog ==
+
+= 2.3.7 =
+
+- tracking: include UTM parameters in pageview tracking requests so integrations can access campaign data.
+- endpoint: harden pageview and event request validation by checking required parameters and accepted types.
+- endpoint: unslash request data when running inside WordPress.
+- endpoint: use exact buffer filename matching when finding existing buffer files.
+- endpoint: use file locking when writing to buffer and session files.
+- endpoint: handle missing upload or sessions directories more defensively.
+- dashboard: fix saving component order when the page contains non-sortable dashboard columns.
+- dashboard: keep an explicit group parameter when switching chart grouping back to days.
+- docs: add campaign parameters to in-plugin links to Koko Analytics documentation and Pro pages.
+
 
 = 2.3.6 =
 
@@ -150,13 +163,5 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 = 2.3.3 =
 
 - database: fix table and column value for upserting new referrer URL's.
-
-
-= 2.3.2 =
-
-- dashboard: draggable icon now only shows up when hovering table header, not table body
-- database: prevent running database migrations concurrently 
-- database: try to increase time limit to 300s before running database migrations
-- database: re-acquire and extend acquired lock after every individual database migration step
 
 [View the full changelog on GitHub](https://github.com/ibericode/koko-analytics/blob/main/CHANGELOG.md)

@@ -17,7 +17,11 @@ use DateTimeImmutable;
 function extract_pageview_data(array $raw): array
 {
     // do nothing if a required parameter is missing
-    if (!isset($raw['pa'])) {
+    if (!isset($raw['pa'], $raw['po'])) {
+        return [];
+    }
+
+    if (!is_string($raw['pa']) || (isset($raw['po']) && !is_scalar($raw['po'])) || (isset($raw['r']) && !is_string($raw['r']))) {
         return [];
     }
 
@@ -54,6 +58,10 @@ function extract_event_data(array $raw): array
         return [];
     }
 
+    if (!is_string($raw['e']) || !is_string($raw['p']) || !is_scalar($raw['v'])) {
+        return [];
+    }
+
     $event_name = \trim($raw['e']);
     $event_param = \trim($raw['p']);
     if (\strlen($event_name) === 0) {
@@ -82,6 +90,17 @@ function extract_event_data(array $raw): array
     ];
 }
 
+function get_request_params(): array
+{
+    // We need to accept both GET and POST because the AMP integration uses URL query parameters.
+    $request_params = array_merge($_GET, $_POST);
+    if (\function_exists('wp_unslash')) {
+        $request_params = \wp_unslash($request_params);
+    }
+
+    return $request_params;
+}
+
 function collect_request()
 {
     // ignore requests from bots, crawlers and link previews
@@ -95,8 +114,7 @@ function collect_request()
         return;
     }
 
-    // we need to accept both GET and POST because the AMP integration uses URL query parameters
-    $request_params = array_merge($_GET, $_POST);
+    $request_params = get_request_params();
     $data = isset($request_params['e']) ? extract_event_data($request_params) : extract_pageview_data($request_params);
     if (!empty($data)) {
         // store data in buffer file
@@ -149,7 +167,7 @@ function get_buffer_filename(): string
         $filenames = \scandir($upload_dir);
         if (\is_array($filenames)) {
             foreach ($filenames as $filename) {
-                if (\str_starts_with($filename, "buffer-") && ! \str_ends_with($filename, ".busy")) {
+                if (\preg_match('/^buffer-[a-f0-9]{32}\.csv$/', $filename)) {
                     return "{$upload_dir}/{$filename}";
                 }
             }
@@ -168,13 +186,16 @@ function collect_in_file(array $data): bool
     if (! \is_dir($directory)) {
         \mkdir($directory, 0755, true);
     }
+    if (! \is_dir($directory)) {
+        return false;
+    }
 
     // append serialized data to file
     // TODO: Write CSV data here, but ideally we want to run the aggregator just once using the old data format after each plugin update
     $content = \serialize($data);
     $content .= PHP_EOL;
 
-    return (bool) \file_put_contents($filename, $content, FILE_APPEND);
+    return (bool) \file_put_contents($filename, $content, FILE_APPEND | LOCK_EX);
 }
 
 function test_collect_in_file(): bool
@@ -187,6 +208,9 @@ function test_collect_in_file(): bool
     $directory = \dirname($filename);
     if (! \is_dir($directory)) {
         \mkdir($directory, 0755, true);
+    }
+    if (! \is_dir($directory)) {
+        return false;
     }
 
     return \is_writable($directory);
@@ -254,8 +278,8 @@ function determine_uniqueness(array $request_params, string $type, $thing): arra
 function determine_uniqueness_cookie(string $type, $thing): array
 {
     $things = isset($_COOKIE['_koko_analytics_pages_viewed']) ? \explode('-', $_COOKIE['_koko_analytics_pages_viewed']) : [];
-    $unique_type = $type && !\in_array($type[0], $things);
-    $unique_thing =  $unique_type || ! \in_array($thing, $things);
+    $unique_type = $type && !\in_array($type[0], $things, true);
+    $unique_thing =  $unique_type || ! \in_array($thing, $things, true);
 
     if ($unique_type) {
         $things[] = $type[0];
@@ -273,11 +297,27 @@ function determine_uniqueness_cookie(string $type, $thing): array
 
 function determine_uniqueness_fingerprint(string $type, $thing): array
 {
-    $seed_value = \file_get_contents(get_upload_dir() . '/sessions/.daily_seed');
+    // Fingerprint storage is provisioned on plugin activation and when settings change.
+    // Do not create it from the public endpoint, because that would skip directory protection.
+    $sessions_dir = get_upload_dir() . '/sessions';
+    if (! \is_dir($sessions_dir)) {
+        return [true, true];
+    }
+
+    $seed_file = "{$sessions_dir}/.daily_seed";
+    if (! \is_file($seed_file)) {
+        return [true, true];
+    }
+
+    $seed_value = \file_get_contents($seed_file);
+    if (! \is_string($seed_value)) {
+        return [true, true];
+    }
+
     $user_agent = $_SERVER['HTTP_USER_AGENT'];
     $ip_address = get_client_ip();
     $visitor_id = \hash(PHP_VERSION_ID >= 80100 ? "xxh64" : "sha1", "{$seed_value}-{$user_agent}-{$ip_address}", false);
-    $session_file = get_upload_dir() . "/sessions/{$visitor_id}";
+    $session_file = "{$sessions_dir}/{$visitor_id}";
     $things = [];
 
     // only read file if it exists and is not from before today
@@ -292,10 +332,10 @@ function determine_uniqueness_fingerprint(string $type, $thing): array
     }
 
     // check if type indicator is in session file
-    $unique_type = $type && ! \in_array($type[0], $things);
+    $unique_type = $type && ! \in_array($type[0], $things, true);
 
     // check if page id or event hash is in session file
-    $unique_thing = $unique_type || ! \in_array($thing, $things);
+    $unique_thing = $unique_type || ! \in_array($thing, $things, true);
 
     // build string to append to session file
     $append = "";
@@ -306,7 +346,7 @@ function determine_uniqueness_fingerprint(string $type, $thing): array
         $append .= "{$thing}\n";
     }
     if ($append !== '') {
-        \file_put_contents($session_file, $append, FILE_APPEND);
+        \file_put_contents($session_file, $append, FILE_APPEND | LOCK_EX);
     }
 
     return [$unique_type, $unique_thing];
