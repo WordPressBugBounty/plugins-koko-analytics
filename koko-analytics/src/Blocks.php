@@ -25,7 +25,7 @@ class Blocks
             'wp-blocks',
             'wp-components',
             'wp-element',
-            'wp-i18n'
+            'wp-i18n',
         ]);
         register_block_type('koko-analytics/counter', [
             'render_callback' => [$this, 'render_counter'],
@@ -35,7 +35,7 @@ class Blocks
         // most viewed pages block
         wp_register_script('koko-analytics-most-viewed-pages-block', plugins_url('assets/js/block-most-viewed-pages.js', KOKO_ANALYTICS_PLUGIN_FILE), ['wp-blocks']);
         register_block_type('koko-analytics/most-viewed-pages', [
-            'editor_script' => 'koko-analytics-most-viewed-pages-block'
+            'editor_script' => 'koko-analytics-most-viewed-pages-block',
         ]);
     }
 
@@ -46,6 +46,7 @@ class Blocks
     public function render_counter($args)
     {
         $count = (new Shortcode_Site_Counter())->content($args);
+        /* translators: %s: number of pageviews. */
         return '<p>' . sprintf(__('This page has been viewed a total of %s times', 'koko-analytics'), $count) . '</p>';
     }
 
@@ -84,8 +85,8 @@ class Blocks
         }
 
         $vars['ignore_sticky_posts'] = true;
-        $vars['orderby'] = 'post__in';
-        $vars['post__in'] = $post_ids;
+        $vars['orderby']             = 'post__in';
+        $vars['post__in']            = $post_ids;
         return $vars;
     }
 }

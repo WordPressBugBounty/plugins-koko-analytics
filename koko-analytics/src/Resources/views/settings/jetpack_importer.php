@@ -7,7 +7,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
     ?>
     <div class="ka-alert ka-alert-success ka-alert-dismissible" role="alert">
         <?php esc_html_e('Big success! Your stats are now imported into Koko Analytics.', 'koko-analytics'); ?>
-        <button type="button" class="btn-close" aria-label="<?= esc_attr__('Close', 'koko-analytics') ?>" onclick="this.parentElement.remove()"></button>
+        <button type="button" class="btn-close" aria-label="<?php esc_attr_e('Close', 'koko-analytics'); ?>" onclick="this.parentElement.remove()"></button>
     </div>
 <?php } ?>
 
@@ -25,6 +25,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
             <th><label for="wpcom-api-key"><?php esc_html_e('WordPress.com API key', 'koko-analytics'); ?></label></th>
             <td>
                 <input id="wpcom-api-key" type="text" class="regular-text" name="wpcom-api-key" required>
+                <?php /* translators: 1: opening anchor tag, 2: closing anchor tag. */ ?>
                 <p class="description"><?php printf(esc_html__('You can %1$sfind your WordPress.com API key here%2$s.', 'koko-analytics'), '<a href="https://apikey.wordpress.com/" target="_blank">', '</a>'); ?></p>
             </td>
         </tr>
@@ -40,7 +41,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
         <tr>
             <th><label for="date-start"><?php esc_html_e('Start date', 'koko-analytics'); ?></label></th>
             <td>
-                <input id="date-start" name="date-start" type="date" value="<?php echo esc_attr(date('Y-m-d', strtotime('-1 year'))); ?>" required>
+                <input id="date-start" name="date-start" type="date" value="<?php echo esc_attr(gmdate('Y-m-d', strtotime('-1 year'))); ?>" required>
                 <p class="description"><?php esc_html_e('The earliest date for which to import data. You should probably set this to the date that you installed and activated Jetpack Stats.', 'koko-analytics'); ?></p>
 
             </td>
@@ -49,7 +50,7 @@ if (isset($_GET['success']) && $_GET['success'] == 1) {
         <tr>
             <th><label for="date-end"><?php esc_html_e('End date', 'koko-analytics'); ?></label></th>
             <td>
-                <input id="date-end" name="date-end" type="date" value="<?php echo esc_attr(date('Y-m-d')); ?>" required>
+                <input id="date-end" name="date-end" type="date" value="<?php echo esc_attr(gmdate('Y-m-d')); ?>" required>
                 <p class="description"><?php esc_html_e('The last date for which to import data. You should probably set this to just before the date that you installed and activated Koko Analytics.', 'koko-analytics'); ?></p>
 
             </td>

@@ -1,13 +1,13 @@
 <?php
 
-defined('ABSPATH') or exit;
+defined('ABSPATH') || exit;
 
 /**
 * @var array $settings
 * @var array $user_roles
 */
 ?>
-<h2 class="mt-0 mb-3"><?= esc_html__('Tracking settings', 'koko-analytics'); ?></h2>
+<h2 class="mt-0 mb-3"><?php esc_html_e('Tracking settings', 'koko-analytics'); ?></h2>
 <form method="POST" action="">
     <?php wp_nonce_field('koko_analytics_save_settings'); ?>
     <?php wp_referer_field(); ?>
@@ -37,7 +37,10 @@ defined('ABSPATH') or exit;
                 </li>
             </ul>
 
-            <p class="description"><?php echo sprintf(wp_kses(__('For some more information about how each of these methods work, read this article on <a href="%1$s">cookie vs. cookieless tracking</a>.', 'koko-analytics'), ['a' => ['href' => true]]), 'https://www.kokoanalytics.com/docs/tracking/cookie-vs-cookieless-tracking-methods/#utm_source=koko-analytics&amp;utm_medium=link&amp;utm_campaign=free-plugin-settings-tracking-docs'); ?></p>
+            <p class="description">
+                <?php /* translators: %1$s: cookie vs. cookieless tracking documentation URL. */ ?>
+                <?php printf(wp_kses(__('For some more information about how each of these methods work, read this article on <a href="%1$s">cookie vs. cookieless tracking</a>.', 'koko-analytics'), ['a' => ['href' => true]]), 'https://www.kokoanalytics.com/docs/tracking/cookie-vs-cookieless-tracking-methods/#utm_source=koko-analytics&amp;utm_medium=link&amp;utm_campaign=free-plugin-settings-tracking-docs'); ?>
+            </p>
         </fieldset>
     </div>
     <div class="mb-4">
@@ -45,11 +48,11 @@ defined('ABSPATH') or exit;
         <select id="ka-exclude-user-roles" multiple="" class="ka-select mb-2" name="koko_analytics_settings[exclude_user_roles][]" style="min-height: <?php echo count($user_roles) * 24; ?>px; min-width: 240px;">
             <?php
             foreach ($user_roles as $key => $value) {
-                $key = esc_attr($key);
-                $value = esc_html($value);
+                $key      = esc_attr($key);
+                $value    = esc_html($value);
                 $selected = (in_array($key, $settings['exclude_user_roles']) ? 'selected' : '');
 
-                echo "<option value=\"{$key}\" {$selected}>{$value}</option>";
+                echo "<option value=\"{$key}\" {$selected}>{$value}</option>"; // phpcs:ignore
             }
             ?>
         </select>
@@ -62,7 +65,7 @@ defined('ABSPATH') or exit;
     <div class="mb-4">
         <label for="ka-exclude-ip-addresses" class="ka-label"><?php esc_html_e('Exclude pageviews from these IP addresses', 'koko-analytics'); ?></label>
         <?php
-        echo sprintf('<textarea id="ka-exclude-ip-addresses" name="koko_analytics_settings[exclude_ip_addresses]" class="ka-input mb-2" rows="%d">', max(4, count($settings['exclude_ip_addresses'])));
+        printf('<textarea id="ka-exclude-ip-addresses" name="koko_analytics_settings[exclude_ip_addresses]" class="ka-input mb-2" rows="%d">', esc_attr((string) max(4, count($settings['exclude_ip_addresses']))));
         echo esc_textarea(join(PHP_EOL, $settings['exclude_ip_addresses']));
         echo '</textarea>';
         ?>
@@ -72,6 +75,7 @@ defined('ABSPATH') or exit;
             <?php esc_html_e('Enter each IP address on its own line.', 'koko-analytics'); ?>
             <?php echo ' '; ?>
             <?php if (\KokoAnalytics\get_client_ip()) : ?>
+                <?php /* translators: %s: current IP address. */ ?>
                 <?php printf(esc_html__('Your current IP address is %s.', 'koko-analytics'), '<code>' . esc_html(\KokoAnalytics\get_client_ip()) . '</code>'); ?>
             <?php endif; ?>
         </p>
@@ -118,6 +122,6 @@ defined('ABSPATH') or exit;
     <?php do_action('koko_analytics_output_after_tracking_settings', $settings); ?>
 
     <div>
-        <input type="submit" class="btn btn-primary" value="<?= esc_attr__('Save Changes') ?>">
+        <input type="submit" class="btn btn-primary" value="<?php esc_attr_e('Save Changes', 'koko-analytics'); ?>">
     </div>
 </form>

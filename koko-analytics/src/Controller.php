@@ -86,8 +86,9 @@ class Controller
 
     public function maybe_collect_request(): void
     {
-        // TODO: Remove the $_GET check after 2026-04-16
-        if (($_GET['action'] ?? '') !== 'koko_analytics_collect' && ($_POST['action'] ?? '') !== 'koko_analytics_collect') {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+        $action = $_POST['action'] ?? '';
+        if ($action !== 'koko_analytics_collect') {
             return;
         }
 
@@ -98,14 +99,12 @@ class Controller
     {
         if (get_option('permalink_structure', false)) {
             // do nothing if url not matches
-            if (! str_contains($_SERVER['REQUEST_URI'] ?? '', '/koko-analytics-dashboard/')) {
+            if (! str_contains(wp_unslash($_SERVER['REQUEST_URI'] ?? ''), '/koko-analytics-dashboard/')) {
                 return;
             }
-        } else {
+        } elseif (! isset($_GET['koko-analytics-dashboard'])) {
             // do nothing if query string not set
-            if (! isset($_GET['koko-analytics-dashboard'])) {
-                return;
-            }
+            return;
         }
 
         (new Dashboard_Public())->show();

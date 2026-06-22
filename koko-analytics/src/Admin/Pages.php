@@ -25,9 +25,9 @@ class Pages
         // check if cron event is scheduled properly
         if (false === $this->is_cron_event_working()) {
             echo '<div class="ka-alert ka-alert-warning ka-alert-dismissible" role="alert"  style="margin-top: 1rem; margin-right: 20px;">';
-            echo esc_html__('There seems to be an issue with your site\'s WP Cron configuration that prevents Koko Analytics from automatically processing your statistics.', 'koko-analytics');
+            esc_html_e('There seems to be an issue with your site\'s WP Cron configuration that prevents Koko Analytics from automatically processing your statistics.', 'koko-analytics');
             echo ' ';
-            echo esc_html__('If you\'re not sure what this is about, please ask your webhost to look into this.', 'koko-analytics');
+            esc_html_e('If you\'re not sure what this is about, please ask your webhost to look into this.', 'koko-analytics');
             echo '<button type="button" class="btn-close" aria-label="', esc_attr__('Close', 'koko-analytics'), '" onclick="this.parentElement.remove()"></button>';
             echo '</div>';
         }
@@ -39,6 +39,7 @@ class Pages
 
         if (false === $is_buffer_dir_writable) {
             echo '<div class="ka-alert ka-alert-warning ka-alert-dismissible" role="alert" style="margin-top: 1rem; margin-right: 20px;">';
+            /* translators: %s: directory path. */
             echo wp_kses(\sprintf(__('Koko Analytics is unable to write to the <code>%s</code> directory. Please update the file permissions so that your web server can write to it.', 'koko-analytics'), $buffer_dirname), ['code' => []]);
             echo '<button type="button" class="btn-close" aria-label="', esc_attr__('Close', 'koko-analytics'), '" onclick="this.parentElement.remove()"></button>';
             echo '</div>';
@@ -54,7 +55,7 @@ class Pages
             return;
         }
 
-        $tabs = apply_filters('koko_analytics_settings_tabs', [
+        $tabs                  = apply_filters('koko_analytics_settings_tabs', [
             'tracking' => __('Tracking', 'koko-analytics'),
             'dashboard' => __('Dashboard', 'koko-analytics'),
             'events' => __('Events', 'koko-analytics'),
@@ -63,13 +64,17 @@ class Pages
             'performance' => __('Performance', 'koko-analytics'),
             'help' => __('Help', 'koko-analytics'),
         ]);
-        $extra_tabs = ['jetpack_importer', 'plausible_importer'];
-        $active_tab = isset($_GET['tab']) && (array_key_exists($_GET['tab'], $tabs) || in_array($_GET['tab'], $extra_tabs)) ? $_GET['tab'] : 'tracking';
-        $settings           = get_settings();
+        $extra_tabs            = ['jetpack_importer', 'plausible_importer'];
+        $active_tab = wp_unslash($_GET['tab'] ?? '');
+        // ensure tab is one of the above
+        if (! array_key_exists($active_tab, $tabs) && ! in_array($active_tab, $extra_tabs, true)) {
+            $active_tab = 'tracking';
+        }
+        $settings              = get_settings();
         $using_custom_endpoint = using_custom_endpoint();
-        $user_roles   = $this->get_available_roles();
-        $date_presets = (new Dashboard())->get_date_presets();
-        $public_dashboard_url = (new Dashboard_Public())->get_base_url();
+        $user_roles            = $this->get_available_roles();
+        $date_presets          = (new Dashboard())->get_date_presets();
+        $public_dashboard_url  = (new Dashboard_Public())->get_base_url();
 
         require KOKO_ANALYTICS_PLUGIN_DIR . '/src/Resources/views/settings-page.php';
     }
@@ -92,7 +97,7 @@ class Pages
     {
         // Always return true on localhost / dev-ish environments
         $site_url = get_site_url();
-        $parts = parse_url($site_url);
+        $parts    = parse_url($site_url);
         if (!is_array($parts) || !empty($parts['port']) || str_contains($parts['host'], 'localhost') || str_contains($parts['host'], 'local')) {
             return true;
         }

@@ -19,7 +19,7 @@ class Script_Loader
     // WARNING: is used in Koko Analytics Pro (in its static form)
     public static function get_request_path(): string
     {
-        return Path::normalize($_SERVER["REQUEST_URI"] ?? '/');
+        return Path::normalize(wp_unslash($_SERVER["REQUEST_URI"] ?? '/'));
     }
 
     public function hook(): void
@@ -41,7 +41,7 @@ class Script_Loader
         }
 
         if (apply_filters('koko_analytics_print_html_comments', true)) {
-            echo PHP_EOL . '<!-- Koko Analytics v' . KOKO_ANALYTICS_VERSION . ' - https://www.kokoanalytics.com/ -->' . PHP_EOL;
+            echo PHP_EOL . '<!-- Koko Analytics v' . esc_html(KOKO_ANALYTICS_VERSION) . ' - https://www.kokoanalytics.com/ -->' . PHP_EOL;
         }
         wp_print_inline_script_tag(file_get_contents(KOKO_ANALYTICS_PLUGIN_DIR . '/assets/js/script.js'));
         echo PHP_EOL;
@@ -97,21 +97,21 @@ class Script_Loader
             // if true, takes priority of the method property defined above
             'use_cookie' => $settings['tracking_method'] === 'cookie',
         ];
-        $data = 'window.koko_analytics = ' . \json_encode($script_config) . ';';
+        $data          = 'window.koko_analytics = ' . \json_encode($script_config) . ';';
         wp_print_inline_script_tag($data);
     }
 
     public function print_amp_analytics_tag(): void
     {
-        $settings     = get_settings();
-        $data         = [
+        $settings = get_settings();
+        $data     = [
             'action' => 'koko_analytics_collect',
             'm' => $settings['tracking_method'][0],
             'po' => $this->get_post_id(),
             'pa' => self::get_request_path(),
         ];
-        $url          = add_query_arg($data, $this->get_tracker_url());
-        $config       = [
+        $url      = add_query_arg($data, $this->get_tracker_url());
+        $config   = [
             'requests' => [
                 'pageview' => $url,
             ],

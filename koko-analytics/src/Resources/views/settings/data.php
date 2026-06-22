@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') or exit;
+defined('ABSPATH') || exit;
 
 /**
  * @var array $settings
@@ -8,13 +8,14 @@ defined('ABSPATH') or exit;
 $database_stats = \KokoAnalytics\get_database_stats()->get();
 ?>
 
-<h2 class="mt-0 mb-3"><?= esc_html__('Data settings', 'koko-analytics') ?></h2>
+<h2 class="mt-0 mb-3"><?php esc_html_e('Data settings', 'koko-analytics'); ?></h2>
 
 <div class="mb-5">
     <h3 class="mb-2"><?php esc_html_e('Database usage', 'koko-analytics'); ?></h3>
     <p>
         <?php
         printf(
+            /* translators: 1: database size, 2: number of database rows. */
             esc_html__('Koko Analytics is using %1$s across approximately %2$s rows.', 'koko-analytics'),
             esc_html(size_format($database_stats['total_size'])),
             esc_html(number_format_i18n($database_stats['total_rows']))
@@ -38,11 +39,11 @@ $database_stats = \KokoAnalytics\get_database_stats()->get();
                 <tbody>
                     <?php foreach ($database_stats['tables'] as $table) : ?>
                         <tr>
-                            <td><code><?= esc_html($table['name']) ?></code></td>
-                            <td><?= esc_html('~' . number_format_i18n($table['rows'])) ?></td>
-                            <td><?= esc_html(size_format($table['data_size'])) ?></td>
-                            <td><?= esc_html(size_format($table['index_size'])) ?></td>
-                            <td><?= esc_html(size_format($table['total_size'])) ?></td>
+                            <td><code><?= esc_html($table['name']); ?></code></td>
+                            <td><?= esc_html('~' . number_format_i18n($table['rows'])); ?></td>
+                            <td><?= esc_html(size_format($table['data_size'])); ?></td>
+                            <td><?= esc_html(size_format($table['index_size'])); ?></td>
+                            <td><?= esc_html(size_format($table['total_size'])); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -63,8 +64,8 @@ $database_stats = \KokoAnalytics\get_database_stats()->get();
         <p class="description"><?php esc_html_e('Statistics older than the number of months configured here will automatically be deleted. Set to 0 to disable.', 'koko-analytics'); ?></p>
     </div>
 
-     <div class="mb-5">
-        <input type="submit" class="btn btn-primary" value="<?= esc_attr__('Save Changes') ?>">
+    <div class="mb-5">
+        <input type="submit" class="btn btn-primary" value="<?php esc_attr_e('Save Changes', 'koko-analytics'); ?>">
     </div>
 </form>
 
@@ -85,11 +86,11 @@ $database_stats = \KokoAnalytics\get_database_stats()->get();
     </form>
 
     <h4 class="mt-4"><?php esc_html_e('Import from another plugin', 'koko-analytics'); ?></h4>
-    <p><?= esc_html__('If you\'re coming from another statistics plugin, you may be able to import your historical data using one of our importers listed below.', 'koko-analytics'); ?></p>
+    <p><?php esc_html_e('If you\'re coming from another statistics plugin, you may be able to import your historical data using one of our importers listed below.', 'koko-analytics'); ?></p>
 
     <ul class="ul-square">
-        <li><a href="<?= esc_attr(admin_url('options-general.php?page=koko-analytics-settings&tab=jetpack_importer')) ?>"><?php esc_html_e('Import from Jetpack Stats', 'koko-analytics'); ?></a></li>
-        <li><a href="<?= esc_attr(admin_url('options-general.php?page=koko-analytics-settings&tab=plausible_importer')) ?>"><?php esc_html_e('Import from Plausible', 'koko-analytics'); ?></a></li>
+        <li><a href="<?= esc_attr(admin_url('options-general.php?page=koko-analytics-settings&tab=jetpack_importer')); ?>"><?php esc_html_e('Import from Jetpack Stats', 'koko-analytics'); ?></a></li>
+        <li><a href="<?= esc_attr(admin_url('options-general.php?page=koko-analytics-settings&tab=plausible_importer')); ?>"><?php esc_html_e('Import from Plausible', 'koko-analytics'); ?></a></li>
     </ul>
 </div>
 

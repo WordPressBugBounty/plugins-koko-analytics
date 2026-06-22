@@ -20,7 +20,8 @@ class Data_Import
 
         $settings_page = admin_url('options-general.php?page=koko-analytics-settings&tab=data');
 
-        if (empty($_FILES['import-file']) || $_FILES['import-file']['error'] !== UPLOAD_ERR_OK) {
+        $import_file = $_FILES['import-file'] ?? [];
+        if (empty($import_file) || $import_file['error'] !== UPLOAD_ERR_OK) {
             wp_safe_redirect(add_query_arg(['error' => urlencode(__('Something went wrong trying to process your import file.', 'koko-analytics'))], $settings_page));
             exit;
         }
@@ -28,13 +29,13 @@ class Data_Import
         @set_time_limit(300);
 
         try {
-            $this->run($_FILES['import-file']['tmp_name']);
+            $this->run($import_file['tmp_name']);
         } catch (\Exception $e) {
             wp_safe_redirect(add_query_arg(['error' => urlencode(__('Something went wrong trying to process your import file.', 'koko-analytics') . "\n" . $e->getMessage())], $settings_page));
             exit;
         }
 
-        unlink($_FILES['import-file']['tmp_name']);
+        unlink($import_file['tmp_name']);
 
         wp_safe_redirect(add_query_arg(['message' => urlencode(__('Database was successfully imported from the given file', 'koko-analytics'))], $settings_page));
         exit;
@@ -44,20 +45,21 @@ class Data_Import
     {
         $fh = fopen($file, 'r');
         if (! $fh) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
             throw new Exception(__('Could not read the uploaded import file.', 'koko-analytics'));
         }
 
         /** @var \wpdb $wpdb */
         global $wpdb;
 
-        $tables = Data_Transfer_Tables::get();
-        $current_table = '';
+        $tables          = Data_Transfer_Tables::get();
+        $current_table   = '';
         $current_columns = [];
-        $line_number = 0;
-        $started = false;
+        $line_number     = 0;
+        $started         = false;
 
         while (($line = fgets($fh)) !== false) {
-            $line_number++;
+            ++$line_number;
             $line = trim($line);
 
             if ($line === '') {
@@ -67,26 +69,34 @@ class Data_Import
             $data = json_decode($line, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 fclose($fh);
+                /* translators: %d: line number. */
+                // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                 throw new Exception(sprintf(__('Invalid JSON on line %d.', 'koko-analytics'), $line_number));
             }
 
             if ($this->is_table_declaration($data)) {
-                $table = $data['table'];
+                $table   = $data['table'];
                 $columns = $data['columns'];
 
-                if (! $this->is_list_of_strings($columns)) {
+                if (! $this->is_list_of_column_names($columns)) {
                     fclose($fh);
+                    /* translators: %d: line number. */
+                    // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                     throw new Exception(sprintf(__('Invalid column declaration on line %d.', 'koko-analytics'), $line_number));
                 }
 
                 if (! isset($tables[$table])) {
                     fclose($fh);
-                    throw new Exception(sprintf(__('Unsupported table "%s" on line %d.', 'koko-analytics'), $table, $line_number));
+                    /* translators: 1: table name, 2: line number. */
+                    // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
+                    throw new Exception(sprintf(__('Unsupported table "%1$s" on line %2$d.', 'koko-analytics'), $table, $line_number));
                 }
 
                 if ($columns !== $tables[$table]['columns']) {
                     fclose($fh);
-                    throw new Exception(sprintf(__('Unsupported columns for table "%s" on line %d.', 'koko-analytics'), $table, $line_number));
+                    /* translators: 1: table name, 2: line number. */
+                    // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
+                    throw new Exception(sprintf(__('Unsupported columns for table "%1$s" on line %2$d.', 'koko-analytics'), $table, $line_number));
                 }
 
                 if (! $started) {
@@ -94,18 +104,22 @@ class Data_Import
                     $started = true;
                 }
 
-                $current_table = $table;
+                $current_table   = $table;
                 $current_columns = $columns;
                 continue;
             }
 
             if (! $current_table || ! is_array($data) || ! $this->is_list($data)) {
                 fclose($fh);
+                /* translators: %d: line number. */
+                // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                 throw new Exception(sprintf(__('Unexpected row data on line %d.', 'koko-analytics'), $line_number));
             }
 
             if (count($data) > Data_Transfer_Tables::BATCH_SIZE) {
                 fclose($fh);
+                /* translators: %d: line number. */
+                // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                 throw new Exception(sprintf(__('Too many rows on line %d.', 'koko-analytics'), $line_number));
             }
 
@@ -119,6 +133,7 @@ class Data_Import
         fclose($fh);
 
         if (! $started) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
             throw new Exception(__('Sorry, the uploaded import file does not look like a Koko Analytics export file.', 'koko-analytics'));
         }
     }
@@ -137,14 +152,14 @@ class Data_Import
     /**
      * @param mixed[] $values
      */
-    private function is_list_of_strings(array $values): bool
+    private function is_list_of_column_names(array $values): bool
     {
         if (! $this->is_list($values)) {
             return false;
         }
 
         foreach ($values as $value) {
-            if (! is_string($value)) {
+            if (! is_string($value) || ! preg_match('/^[a-zA-Z0-9_]+$/', $value)) {
                 return false;
             }
         }
@@ -163,7 +178,7 @@ class Data_Import
                 return false;
             }
 
-            $expected_key++;
+            ++$expected_key;
         }
 
         return true;
@@ -178,8 +193,10 @@ class Data_Import
         global $wpdb;
 
         foreach (array_reverse(array_keys($tables)) as $table) {
-            $result = $wpdb->query("DELETE FROM {$wpdb->prefix}{$table}");
+            $table  = $wpdb->prefix . $table;
+            $result = $wpdb->query($wpdb->prepare("DELETE FROM %i", $table));
             if ($result === false) {
+                // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                 throw new Exception($wpdb->last_error);
             }
         }
@@ -196,10 +213,12 @@ class Data_Import
         global $wpdb;
 
         $all_placeholders = [];
-        $values = [];
+        $values           = [];
 
         foreach ($rows as $row) {
             if (! is_array($row) || ! $this->is_list($row) || count($row) !== count($columns)) {
+                /* translators: %d: line number. */
+                // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
                 throw new Exception(sprintf(__('Invalid row data on line %d.', 'koko-analytics'), $line_number));
             }
 
@@ -212,20 +231,22 @@ class Data_Import
                 }
 
                 $row_placeholders[] = $placeholders[$index];
-                $values[] = $value;
+                $values[]           = $value;
             }
 
             $all_placeholders[] = '(' . implode(',', $row_placeholders) . ')';
         }
 
-        $column_sql = implode(', ', array_map(static function (string $column): string {
-            return '`' . str_replace('`', '``', $column) . '`';
-        }, $columns));
-        $sql = "INSERT INTO {$table} ({$column_sql}) VALUES " . implode(',', $all_placeholders);
-        $result = $wpdb->query($wpdb->prepare($sql, $values));
+
+        $column_placeholders = join(',', array_fill(0, count($columns), '%i'));
+        $placeholders        = join(',', $all_placeholders);
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $result = $wpdb->query($wpdb->prepare("INSERT INTO %i ({$column_placeholders}) VALUES {$placeholders}", array_merge([$table], $columns, $values)));
 
         if ($result === false) {
-            throw new Exception($wpdb->last_error);
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception messages are escaped where they are output.
+            throw new Exception("Database error: " . $wpdb->last_error);
         }
     }
 }

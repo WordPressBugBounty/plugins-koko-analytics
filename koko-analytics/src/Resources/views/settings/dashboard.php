@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') or exit;
+defined('ABSPATH') || exit;
 
 /**
  * @var array $settings
@@ -9,13 +9,14 @@ defined('ABSPATH') or exit;
 
 add_action('koko_analytics_output_dashboard_settings', function ($settings) use ($public_dashboard_url) {
     ?>
-      <div class="mb-4">
+        <div class="mb-4">
         <fieldset class="mb-2">
             <legend class="ka-label"><?php esc_html_e('Should your dashboard be publicly accessible?', 'koko-analytics'); ?></legend>
             <label class="me-1"><input type="radio" name="koko_analytics_settings[is_dashboard_public]" value="1" <?php checked($settings['is_dashboard_public'], 1); ?>><?php esc_html_e('Yes', 'koko-analytics'); ?></label>
             <label class=""><input type="radio" name="koko_analytics_settings[is_dashboard_public]" value="0" <?php checked($settings['is_dashboard_public'], 0); ?>> <?php esc_html_e('No', 'koko-analytics'); ?></label>
         </fieldset>
         <p class="description">
+            <?php /* translators: %s: public dashboard URL. */ ?>
             <?php echo wp_kses(sprintf(__('Set to "yes" if you want your dashboard to be publicly accessible. With this setting enabled, you can <a href="%s">find your public dashboard here</a>.', 'koko-analytics'), esc_attr($public_dashboard_url)), ['a' => ['href' => []]]); ?>
         </p>
     </div>
@@ -24,13 +25,13 @@ add_action('koko_analytics_output_dashboard_settings', function ($settings) use 
 
 add_action('koko_analytics_output_dashboard_settings', function ($settings) use ($date_presets) {
     ?>
-     <div class="mb-4">
+    <div class="mb-4">
         <label for="ka-default-date-period" class="ka-label"><?php esc_html_e('Default date period', 'koko-analytics'); ?></label>
         <select class="ka-select mb-2" id="ka-default-date-period" name="koko_analytics_settings[default_view]">
             <?php
             foreach ($date_presets as $key => $label) {
                 $selected = ($key === $settings['default_view'] ? 'selected' : '');
-                echo "<option value=\"{$key}\" {$selected}>{$label}</option>";
+                printf('<option value="%s" %s>%s</option>', esc_attr($key), esc_html($selected), esc_html($label));
             }
             ?>
         </select>
@@ -41,7 +42,7 @@ add_action('koko_analytics_output_dashboard_settings', function ($settings) use 
 
 ?>
 
-<h2 class="mt-0 mb-3"><?= esc_html__('Dashboard settings', 'koko-analytics') ?></h2>
+<h2 class="mt-0 mb-3"><?php esc_html_e('Dashboard settings', 'koko-analytics'); ?></h2>
 <form method="POST" action="">
 
     <input type="hidden" name="koko_analytics_action" value="save_settings">
@@ -53,10 +54,10 @@ add_action('koko_analytics_output_dashboard_settings', function ($settings) use 
     <?php do_action('koko_analytics_output_after_dashboard_settings', $settings); ?>
 
     <div>
-        <input type="submit" class="btn btn-primary" value="<?= esc_attr__('Save Changes') ?>">
+        <input type="submit" class="btn btn-primary" value="<?php esc_attr_e('Save Changes', 'koko-analytics'); ?>">
     </div>
 
     <?php if (!defined('KOKO_ANALYTICS_PRO_VERSION')) : ?>
-     <p class="text-muted mt-5 mb-0"><a class="text-reset" href="https://www.kokoanalytics.com/pricing/?utm_source=koko-analytics&utm_medium=link&utm_campaign=free-plugin-settings-dashboard">Upgrade to Koko Analytics Pro</a> to password protect your public analytics dashboard.</p>
+    <p class="text-muted mt-5 mb-0"><a class="text-reset" href="https://www.kokoanalytics.com/pricing/?utm_source=koko-analytics&utm_medium=link&utm_campaign=free-plugin-settings-dashboard">Upgrade to Koko Analytics Pro</a> to password protect your public analytics dashboard.</p>
     <?php endif; ?>
 </form>

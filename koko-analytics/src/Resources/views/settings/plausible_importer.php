@@ -1,9 +1,9 @@
-<?php defined('ABSPATH') or exit; ?>
+<?php defined('ABSPATH') || exit; ?>
 
 <?php if (isset($_GET['success']) && $_GET['success'] == 1) { ?>
     <div class="ka-alert ka-alert-success ka-alert-dismissible" role="alert">
         <?php esc_html_e('Big success! Your stats are now imported into Koko Analytics.', 'koko-analytics'); ?>
-        <button type="button" class="btn-close" aria-label="<?= esc_attr__('Close', 'koko-analytics') ?>" onclick="this.parentElement.remove()"></button>
+        <button type="button" class="btn-close" aria-label="<?php esc_attr_e('Close', 'koko-analytics'); ?>" onclick="this.parentElement.remove()"></button>
     </div>
 <?php } ?>
 
@@ -26,7 +26,7 @@
         <tr>
             <th><label for="date-start"><?php esc_html_e('Start date', 'koko-analytics'); ?></label></th>
             <td>
-                <input id="date-start" name="date-start" type="date" value="<?php echo esc_attr(date('Y-m-d', strtotime('-1 year'))); ?>" required>
+                <input id="date-start" name="date-start" type="date" value="<?php echo esc_attr(gmdate('Y-m-d', strtotime('-1 year'))); ?>" required>
                 <p class="description"><?php esc_html_e('The earliest date for which to import data.', 'koko-analytics'); ?></p>
 
             </td>
@@ -35,7 +35,7 @@
         <tr>
             <th><label for="date-end"><?php esc_html_e('End date', 'koko-analytics'); ?></label></th>
             <td>
-                <input id="date-end" name="date-end" type="date" value="<?php echo esc_attr(date('Y-m-d')); ?>" required>
+                <input id="date-end" name="date-end" type="date" value="<?php echo esc_attr(gmdate('Y-m-d')); ?>" required>
                 <p class="description"><?php esc_html_e('The last date for which to import data.', 'koko-analytics'); ?></p>
 
             </td>

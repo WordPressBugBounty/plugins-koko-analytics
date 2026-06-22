@@ -34,7 +34,7 @@ abstract class Importer
             return;
         }
 
-        $paths = array_column($rows, 1);
+        $paths    = array_column($rows, 1);
         $upserter = new Upserter('paths', 'path');
         $path_ids = $upserter->upsert($paths);
 
@@ -44,11 +44,11 @@ abstract class Importer
         }
         $placeholders = rtrim(str_repeat('(%s,%d,%d,%d,%d),', count($rows)), ',');
 
-        $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, path_id, post_id, visitors, pageviews) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values);
-        $wpdb->query($query);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $wpdb->query($wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_post_stats(date, path_id, post_id, visitors, pageviews) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values));
 
         if ($wpdb->last_error !== '') {
-            throw new Exception(__("A database error occurred: ", 'koko-analytics') . " {$wpdb->last_error}");
+            throw new Exception(esc_html__("A database error occurred: ", 'koko-analytics') . esc_html(" {$wpdb->last_error}"));
         }
     }
 
@@ -65,9 +65,9 @@ abstract class Importer
             return;
         }
 
-        $urls = array_column($rows, 1);
+        $urls     = array_column($rows, 1);
         $upserter = new Upserter('referrer_labels', 'value');
-        $ids = $upserter->upsert($urls);
+        $ids      = $upserter->upsert($urls);
 
         $values = [];
         foreach ($rows as $r) {
@@ -75,11 +75,11 @@ abstract class Importer
         }
         $placeholders = rtrim(str_repeat('(%s,%d,%d,%d),', count($rows)), ',');
 
-        $query = $wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_referrer_stats(date, id, unique_hits, hits) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values);
-        $wpdb->query($query);
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $wpdb->query($wpdb->prepare("INSERT INTO {$wpdb->prefix}koko_analytics_referrer_stats(date, id, unique_hits, hits) VALUES {$placeholders} ON DUPLICATE KEY UPDATE visitors = visitors + VALUES(visitors), pageviews = pageviews + VALUES(pageviews)", $values));
 
         if ($wpdb->last_error !== '') {
-            throw new Exception(__("A database error occurred: ", 'koko-analytics') . " {$wpdb->last_error}");
+            throw new Exception(esc_html__("A database error occurred: ", 'koko-analytics') . esc_html(" {$wpdb->last_error}"));
         }
     }
 }

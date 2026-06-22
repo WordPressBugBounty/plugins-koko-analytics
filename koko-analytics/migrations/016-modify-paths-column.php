@@ -1,10 +1,11 @@
 <?php
 
-defined('ABSPATH') or exit;
+defined('ABSPATH') || exit;
 
 /** @var wpdb $wpdb */
 global $wpdb;
 
+// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 $table_paths = "{$wpdb->prefix}koko_analytics_paths";
 
 // Truncate any paths longer than 255 characters before changing column size

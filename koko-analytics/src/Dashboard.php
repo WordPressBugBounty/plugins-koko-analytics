@@ -13,7 +13,7 @@ use DateTimeInterface;
 
 class Dashboard
 {
-    public const MAX_LIMIT = 100;
+    public const MAX_LIMIT  = 100;
     public const MAX_OFFSET = 10000;
 
     public static function clamp_limit($value, int $default = 10, int $minimum = 1): int
@@ -34,33 +34,33 @@ class Dashboard
 
     public function show()
     {
-        $settings   = get_settings();
-        $stats = new Stats();
+        $settings       = get_settings();
+        $stats          = new Stats();
         $items_per_page = (int) apply_filters('koko_analytics_items_per_page', 20);
-        $date_format = get_option('date_format', 'Y-m-d');
-        $dashboard_url = $this->get_base_url();
+        $date_format    = get_option('date_format', 'Y-m-d');
+        $dashboard_url  = $this->get_base_url();
 
         // parse query params
         if (isset($_GET['start_date']) || isset($_GET['end_date'])) {
             $range = 'custom';
         } elseif (isset($_GET['view'])) {
-            $range = trim($_GET['view']);
+            $range = trim(wp_unslash($_GET['view']));
         } else {
             $range = $settings['default_view'];
         }
-        $timezone = wp_timezone();
-        $now = new DateTimeImmutable('now', $timezone);
+        $timezone       = wp_timezone();
+        $now            = new DateTimeImmutable('now', $timezone);
         $week_starts_on = (int) get_option('start_of_week', 0);
-        $date_range = $this->get_dates_for_range($now, $range, $week_starts_on);
-        $page = isset($_GET['p']) ? trim($_GET['p']) : 0;
+        $date_range     = $this->get_dates_for_range($now, $range, $week_starts_on);
+        $page           = isset($_GET['p']) ? trim(wp_unslash($_GET['p'])) : 0;
 
         try {
-            $date_start  = isset($_GET['start_date']) ? new DateTimeImmutable($_GET['start_date'], $timezone) : $date_range[0];
+            $date_start = isset($_GET['start_date']) ? new DateTimeImmutable(wp_unslash($_GET['start_date']), $timezone) : $date_range[0];
         } catch (\Exception $e) {
             $date_start = $date_range[0];
         }
         try {
-            $date_end    = isset($_GET['end_date']) ? new DateTimeImmutable($_GET['end_date'], $timezone) : $date_range[1];
+            $date_end = isset($_GET['end_date']) ? new DateTimeImmutable(wp_unslash($_GET['end_date']), $timezone) : $date_range[1];
         } catch (\Exception $e) {
             $date_end = $date_range[1];
         }
@@ -73,14 +73,14 @@ class Dashboard
         $prev_dates = $this->get_next_period($date_start, $date_end, -1);
 
         $date_start_str = $date_start->format('Y-m-d');
-        $date_end_str = $date_end->format('Y-m-d');
+        $date_end_str   = $date_end->format('Y-m-d');
 
-        $totals = $stats->get_totals($date_start_str, $date_end_str, $page);
+        $totals          = $stats->get_totals($date_start_str, $date_end_str, $page);
         $totals_previous = $stats->get_totals($prev_dates[0]->format('Y-m-d'), $prev_dates[2]->format('Y-m-d'), $page);
-        $realtime = get_realtime_pageview_count('-1 hour');
+        $realtime        = get_realtime_pageview_count('-1 hour');
 
-        if (isset($_GET['group']) && in_array($_GET['group'], ['day', 'week', 'month', 'year'])) {
-            $group_chart_by = $_GET['group'];
+        if (isset($_GET['group']) && in_array(wp_unslash($_GET['group']), ['day', 'week', 'month', 'year'])) {
+            $group_chart_by = wp_unslash($_GET['group']);
         } else {
             $group_chart_by = $date_end->getTimestamp() - $date_start->getTimestamp() >= 86400 * 90 ? 'month' : 'day';
         }
@@ -91,30 +91,30 @@ class Dashboard
 
     public function get_next_period(\DateTimeImmutable $date_start, \DateTimeImmutable $date_end, int $dir = 1): array
     {
-        $now = new \DateTimeImmutable('now', wp_timezone());
+        $now      = new \DateTimeImmutable('now', wp_timezone());
         $modifier = $dir > 0 ? "+" : "-";
 
         if ($date_start->format('d') === "01" && $date_end->format('d') === $date_end->format('t')) {
             // cycling full months
-            $diffInMonths = 1 + ((int) $date_end->format('Y') - (int) $date_start->format('Y')) * 12 + (int) $date_end->format('m') - (int) $date_start->format('m');
-            $periodStart = $date_start->setDate((int) $date_start->format('Y'), (int) $date_start->format('m') + ($dir * $diffInMonths), 1);
-            $periodEnd = $date_end->setDate((int) $date_start->format('Y'), (int) $date_end->format('m') + ($dir * $diffInMonths), 5);
-            $periodEnd = $periodEnd->setDate((int) $periodEnd->format('Y'), (int) $periodEnd->format('m'), (int) $periodEnd->format('t'));
+            $diff_in_months = 1 + ((int) $date_end->format('Y') - (int) $date_start->format('Y')) * 12 + (int) $date_end->format('m') - (int) $date_start->format('m');
+            $period_start   = $date_start->setDate((int) $date_start->format('Y'), (int) $date_start->format('m') + ($dir * $diff_in_months), 1);
+            $period_end     = $date_end->setDate((int) $date_start->format('Y'), (int) $date_end->format('m') + ($dir * $diff_in_months), 5);
+            $period_end     = $period_end->setDate((int) $period_end->format('Y'), (int) $period_end->format('m'), (int) $period_end->format('t'));
         } else {
-            $diffInDays = $date_end->diff($date_start)->days + 1;
-            $periodStart = $date_start->modify("{$modifier}{$diffInDays} days");
-            $periodEnd = $date_end->modify("{$modifier}{$diffInDays} days");
+            $diff_in_days = $date_end->diff($date_start)->days + 1;
+            $period_start = $date_start->modify("{$modifier}{$diff_in_days} days");
+            $period_end   = $date_end->modify("{$modifier}{$diff_in_days} days");
         }
 
         if ($date_end > $now) {
             // limit end date to difference between now and start date, counting from start date
-            $days_diff = $now->diff($date_start)->days;
-            $compareEnd = $periodStart->modify("+{$days_diff} days");
+            $days_diff  = $now->diff($date_start)->days;
+            $compare_end = $period_start->modify("+{$days_diff} days");
         } else {
-            $compareEnd = $periodEnd;
+            $compare_end = $period_end;
         }
 
-        return [$periodStart, $periodEnd, $compareEnd];
+        return [$period_start, $period_end, $compare_end];
     }
 
     public function get_date_presets(): array
@@ -144,10 +144,10 @@ class Dashboard
     {
         ?>
         <div class="ka-alert ka-alert-warning ka-alert-dismissible" role="alert" id="koko-analytics-adblock-notice" style="display: none;">
-            <?php echo esc_html__('You appear to be using an ad-blocker that has Koko Analytics on its blocklist. Please whitelist this domain in your ad-blocker setting if your dashboard does not seem to be working correctly.', 'koko-analytics'); ?>
-            <button type="button" class="btn-close" aria-label="<?= esc_attr__('Close', 'koko-analytics') ?>" onclick="this.parentElement.remove()"></button>
+            <?php esc_html_e('You appear to be using an ad-blocker that has Koko Analytics on its blocklist. Please whitelist this domain in your ad-blocker setting if your dashboard does not seem to be working correctly.', 'koko-analytics'); ?>
+            <button type="button" class="btn-close" aria-label="<?php esc_attr_e('Close', 'koko-analytics'); ?>" onclick="this.parentElement.remove()"></button>
         </div>
-        <script src="<?php echo plugins_url('/assets/js/koko-analytics-script-test.js', KOKO_ANALYTICS_PLUGIN_FILE); ?>?v=<?php echo KOKO_ANALYTICS_VERSION; ?>" defer onerror="document.getElementById('koko-analytics-adblock-notice').style.display = '';"></script>
+        <script src="<?php echo esc_url(plugins_url('/assets/js/koko-analytics-script-test.js', KOKO_ANALYTICS_PLUGIN_FILE)); ?>?v=<?php echo esc_attr(KOKO_ANALYTICS_VERSION); ?>" defer onerror="document.getElementById('koko-analytics-adblock-notice').style.display = '';"></script>
         <?php
     }
 
@@ -166,45 +166,45 @@ class Dashboard
             case 'today':
                 return [
                     $now->modify('today midnight'),
-                    $now->modify('tomorrow midnight, -1 second')
+                    $now->modify('tomorrow midnight, -1 second'),
                 ];
             case 'yesterday':
                 return [
                     $now->modify('yesterday midnight'),
-                    $now->modify('today midnight, -1 second')
+                    $now->modify('today midnight, -1 second'),
                 ];
             case 'this_week':
                 $start = $this->get_first_day_of_current_week($now, $week_starts_on);
                 return [
                     $start,
-                    $start->modify('+7 days, midnight, -1 second')
+                    $start->modify('+7 days, midnight, -1 second'),
                 ];
             case 'last_week':
                 $start = $this->get_first_day_of_current_week($now, $week_starts_on)->modify('-7 days');
                 return [
                     $start,
-                    $start->modify('+7 days, midnight, -1 second')
+                    $start->modify('+7 days, midnight, -1 second'),
                 ];
             case 'last_14_days':
                 return [
                     $now->modify('-14 days'),
-                    $now->modify('tomorrow midnight, -1 second')
+                    $now->modify('tomorrow midnight, -1 second'),
                 ];
             default:
             case 'last_28_days':
                 return [
                     $now->modify('-28 days'),
-                    $now->modify('tomorrow midnight, -1 second')
+                    $now->modify('tomorrow midnight, -1 second'),
                 ];
             case 'this_month':
                 return [
                     $now->modify('first day of this month'),
-                    $now->modify('last day of this month')
+                    $now->modify('last day of this month'),
                 ];
             case 'last_month':
                 return [
                     $now->modify('first day of last month, midnight'),
-                    $now->modify('last day of last month')
+                    $now->modify('last day of last month'),
                 ];
             case 'this_year':
                 return [
@@ -259,7 +259,8 @@ class Dashboard
 
     public function pagination(string $key, int $offset, int $limit, int $count): void
     {
-        if ($offset >= $limit || $offset + $limit < $count) { ?>
+        if ($offset >= $limit || $offset + $limit < $count) {
+            ?>
             <div class='ka-pagination'>
                 <?php if ($offset >= $limit) { ?>
                     <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['p' => null, $key => $offset >= $limit * 2 ? ['offset' => $offset - $limit, 'limit' => $limit] : null ])); ?>" rel="nofollow"><?php esc_html_e('Previous', 'koko-analytics'); ?></a>
@@ -268,24 +269,25 @@ class Dashboard
                     <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['p' => null, $key => ['offset' => $offset + $limit, 'limit' => $limit]])); ?>" rel="nofollow"><?php esc_html_e('Next', 'koko-analytics'); ?></a>
                 <?php } ?>
             </div>
-        <?php }
+            <?php
+        }
     }
 
     public function component_pages(DateTimeInterface $date_start, DateTimeInterface $date_end): void
     {
         $items_per_page = (int) apply_filters('koko_analytics_items_per_page', 20);
-        $offset = self::clamp_offset($_GET['posts']['offset'] ?? null);
-        $limit = self::clamp_limit($_GET['posts']['limit'] ?? null, $items_per_page);
-        $page = isset($_GET['p']) ? trim($_GET['p']) : 0;
+        $offset         = self::clamp_offset(wp_unslash($_GET['posts']['offset'] ?? null));
+        $limit          = self::clamp_limit(wp_unslash($_GET['posts']['limit'] ?? null), $items_per_page);
+        $page           = isset($_GET['p']) ? trim(wp_unslash($_GET['p'])) : 0;
 
         $stats = new Stats();
         $posts = $stats->get_posts($date_start, $date_end, $offset, $limit);
         if (count($posts) < $limit && $offset === 0) {
             $count = count($posts);
-            $sum = array_sum(array_column($posts, 'pageviews'));
+            $sum   = array_sum(array_column($posts, 'pageviews'));
         } else {
             $count = $stats->count_posts($date_start, $date_end);
-            $sum = $stats->sum_posts($date_start, $date_end);
+            $sum   = $stats->sum_posts($date_start, $date_end);
         }
         ?>
         <table class="ka-table">
@@ -293,22 +295,22 @@ class Dashboard
                 <tr>
                     <th style="width: 3ch;" scope="col">#</th>
                     <th class="w-expand" scope="col"><?php esc_html_e('Pages', 'koko-analytics'); ?></th>
-                    <th title="<?= esc_attr__('A visitor represents the number of sessions during which a page was viewed one or more times.', 'koko-analytics'); ?>" class="text-end d-none d-lg-table-cell w-fit text-truncate" scope="row"><?php esc_html_e('Visitors', 'koko-analytics'); ?></th>
-                    <th title="<?= esc_attr__('A pageview is defined as a view of a page on your site. If a user clicks reload after reaching the page, this is counted as an additional pageview. If a visitor navigates to a different page and then returns to the original page, a second pageview is recorded as well.', 'koko-analytics'); ?>" class="text-end ka-pageviews w-fit text-truncate" scope="col"><?php esc_html_e('Pageviews', 'koko-analytics'); ?></th>
+                    <th title="<?php esc_attr_e('A visitor represents the number of sessions during which a page was viewed one or more times.', 'koko-analytics'); ?>" class="text-end d-none d-lg-table-cell w-fit text-truncate" scope="row"><?php esc_html_e('Visitors', 'koko-analytics'); ?></th>
+                    <th title="<?php esc_attr_e('A pageview is defined as a view of a page on your site. If a user clicks reload after reaching the page, this is counted as an additional pageview. If a visitor navigates to a different page and then returns to the original page, a second pageview is recorded as well.', 'koko-analytics'); ?>" class="text-end ka-pageviews w-fit text-truncate" scope="col"><?php esc_html_e('Pageviews', 'koko-analytics'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($posts as $i => $p) { ?>
                     <?php $page_filter = $p->post_id > 0 ? (string) $p->post_id : $p->path; ?>
                     <?php $pct = $sum > 0 && $page === 0  ? round(($p->pageviews / $sum) * 100, 0) : 0; ?>
-                    <tr <?= (string) $page === $page_filter ? 'class="page-filter-active"' : ''; ?> style="background: linear-gradient(to right, var(--koko-analytics-row-gradient-color) <?= $pct ?>%, transparent <?= $pct ?>%);">
-                        <td class="text-muted"><?=  $offset + $i + 1; ?></td>
+                    <tr <?= (string) $page === $page_filter ? 'class="page-filter-active"' : ''; ?> style="background: linear-gradient(to right, var(--koko-analytics-row-gradient-color) <?= esc_attr((string) $pct); ?>%, transparent <?= esc_attr((string) $pct); ?>%);">
+                        <td class="text-muted"><?= esc_html((string) ($offset + $i + 1)); ?></td>
                         <td class="text-truncate">
                             <a href="<?= esc_attr(add_query_arg(['p' => $page_filter])); ?>"><?= esc_html($p->label); ?></a>
                             <a class="ka-visit-link" href="<?= esc_url($p->post_permalink); ?>" target="_blank" rel="noopener" title="<?php esc_attr_e('View page', 'koko-analytics'); ?>"><i class="icon icon-sm icon-external-link" aria-hidden="true"></i></a>
                         </td>
-                        <td class="text-end d-none d-lg-table-cell"><?= number_format_i18n(max(1, $p->visitors)); ?></td>
-                        <td class="text-end"><?= number_format_i18n($p->pageviews); ?></td>
+                        <td class="text-end d-none d-lg-table-cell"><?= esc_html(number_format_i18n(max(1, $p->visitors))); ?></td>
+                        <td class="text-end"><?= esc_html(number_format_i18n($p->pageviews)); ?></td>
                     </tr>
                 <?php } ?>
             </tbody>
@@ -326,16 +328,16 @@ class Dashboard
     public function component_referrers(DateTimeInterface $date_start, DateTimeInterface $date_end): void
     {
         $items_per_page = (int) apply_filters('koko_analytics_items_per_page', 20);
-        $offset = self::clamp_offset($_GET['referrers']['offset'] ?? null);
-        $limit = self::clamp_limit($_GET['referrers']['limit'] ?? null, $items_per_page);
-        $stats = new Stats();
-        $referrers = $stats->get_referrers($date_start, $date_end, $offset, $limit);
+        $offset         = self::clamp_offset(wp_unslash($_GET['referrers']['offset'] ?? null));
+        $limit          = self::clamp_limit(wp_unslash($_GET['referrers']['limit'] ?? null), $items_per_page);
+        $stats          = new Stats();
+        $referrers      = $stats->get_referrers($date_start, $date_end, $offset, $limit);
         if (count($referrers) < $limit && $offset === 0) {
             $count = count($referrers);
-            $sum = array_sum(array_column($referrers, 'pageviews'));
+            $sum   = array_sum(array_column($referrers, 'pageviews'));
         } else {
             $count = $stats->count_referrers($date_start, $date_end);
-            $sum = $stats->sum_referrers($date_start, $date_end);
+            $sum   = $stats->sum_referrers($date_start, $date_end);
         }
         ?>
         <table class="ka-table">
@@ -343,18 +345,18 @@ class Dashboard
                 <tr>
                     <th scope="col" style="width: 3ch;">#</th>
                     <th scope="col"><?php esc_html_e('Referrers', 'koko-analytics'); ?></th>
-                    <th scope="col" title="<?= esc_attr__('A visitor represents the number of sessions during which a page was viewed one or more times.', 'koko-analytics'); ?>" class="text-end d-none d-lg-table-cell w-fit text-truncate" style=""><?php esc_html_e('Visitors', 'koko-analytics'); ?></th>
-                    <th scope="col" title="<?= esc_attr__('A pageview is defined as a view of a page on your site. If a user clicks reload after reaching the page, this is counted as an additional pageview. If a visitor navigates to a different page and then returns to the original page, a second pageview is recorded as well.', 'koko-analytics'); ?>" class="text-end text-truncate w-fit ka-pageviews"><?php esc_html_e('Pageviews', 'koko-analytics'); ?></th>
+                    <th scope="col" title="<?php esc_attr_e('A visitor represents the number of sessions during which a page was viewed one or more times.', 'koko-analytics'); ?>" class="text-end d-none d-lg-table-cell w-fit text-truncate" style=""><?php esc_html_e('Visitors', 'koko-analytics'); ?></th>
+                    <th scope="col" title="<?php esc_attr_e('A pageview is defined as a view of a page on your site. If a user clicks reload after reaching the page, this is counted as an additional pageview. If a visitor navigates to a different page and then returns to the original page, a second pageview is recorded as well.', 'koko-analytics'); ?>" class="text-end text-truncate w-fit ka-pageviews"><?php esc_html_e('Pageviews', 'koko-analytics'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($referrers as $i => $r) { ?>
                     <?php $pct = $sum > 0 ? round(($r->pageviews / $sum) * 100, 0) : 0; ?>
-                    <tr style="background: linear-gradient(to right, var(--koko-analytics-row-gradient-color) <?= $pct ?>%, transparent <?= $pct ?>%);">
-                        <td class="text-muted"><?= $offset + $i + 1; ?></td>
-                        <td class="text-truncate"><?= Fmt::referrer_url_label(esc_html($r->url)); ?></td>
-                        <td class="text-end d-none d-lg-table-cell"><?= number_format_i18n(max(1, $r->visitors)); ?></td>
-                        <td class="text-end"><?= number_format_i18n($r->pageviews); ?></td>
+                    <tr style="background: linear-gradient(to right, var(--koko-analytics-row-gradient-color) <?= esc_attr((string) $pct); ?>%, transparent <?= esc_attr((string) $pct); ?>%);">
+                        <td class="text-muted"><?= esc_html((string) ($offset + $i + 1)); ?></td>
+                        <td class="text-truncate"><?= esc_html(Fmt::referrer_url_label($r->url)); ?></td>
+                        <td class="text-end d-none d-lg-table-cell"><?= esc_html(number_format_i18n(max(1, $r->visitors))); ?></td>
+                        <td class="text-end"><?= esc_html(number_format_i18n($r->pageviews)); ?></td>
                     </tr>
                 <?php } ?>
             </tbody>

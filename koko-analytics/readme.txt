@@ -1,9 +1,9 @@
 === Koko Analytics - Privacy-Friendly WordPress Analytics ===
 Contributors: Ibericode, DvanKooten, kokoanalytics
 Tags: analytics, google analytics, privacy, statistics, website statistics
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.4.0
+Stable tag: 2.4.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -100,6 +100,12 @@ No account is needed. Koko Analytics runs on your own WordPress site, and statis
 
 Yes. Koko Analytics is compatible with pages served from many types of cache.
 
+= Where do I report security bugs found in this plugin? =
+
+Please report security bugs found in the source code of the plugin through the [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/9e5fc096-a451-400e-b839-ee267aaf3bcb). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
+
+= Other questions =
+
 If your question is not listed here, read the [Koko Analytics documentation](https://www.kokoanalytics.com/docs/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin).
 
 == Screenshots ==
@@ -115,6 +121,15 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 9. Country, browser, operating system, and device statistics for deeper website analytics. [Pro]
 
 == Changelog ==
+
+= 2.4.1 =
+
+- import: fix Plausible importer compatibility with PHP 7.4.
+- security: harden data import validation and output escaping.
+- dashboard: fix collation mismatch when querying by path containing utf-8 characters.
+- dashboard: return a 403 response and prevent indexing when visited by bots or crawlers.
+- compatibility: raise the minimum supported WordPress version to 6.2.
+
 
 = 2.4.0 =
 
@@ -157,15 +172,5 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 - perf: aggregation process no longer invalidates alloptions cache on every run.
 - perf: process database pruning in chunks of 10K rows.
 - security: add nonce verification to user-initiated action to update to v2.
-
-
-= 2.3.4 =
-
-- fix: access to Jetpack and Plausible importer pages.
-- fix: database warning because of unexisting table on fresh installs.
-- ux: table rows selectable again.
-- seo: remove canonical URL from public dashboard (because it is already noindex).
-- database: change default database purge treshold to 3 years (down from 5).
-- dashboard: don't listen to query string argument for public dashboard if pretty permalinks are enabled.
 
 [View the full changelog on GitHub](https://github.com/ibericode/koko-analytics/blob/main/CHANGELOG.md)
