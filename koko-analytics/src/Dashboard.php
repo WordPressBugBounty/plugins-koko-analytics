@@ -137,7 +137,7 @@ class Dashboard
     public function notices(): void
     {
         $this->maybe_show_adblocker_notice();
-        $this->maybe_show_pro_notice();
+        $this->maybe_show_review_notice();
     }
 
     protected function maybe_show_adblocker_notice(): void
@@ -151,13 +151,27 @@ class Dashboard
         <?php
     }
 
-    protected function maybe_show_pro_notice(): void
+    protected function maybe_show_review_notice(): void
     {
-        if (! current_user_can('manage_koko_analytics')) {
+        // Don't ask for a review when the Pro add-on is already installed.
+        if (defined('KOKO_ANALYTICS_PRO_VERSION')) {
             return;
         }
 
-        new Notice_Pro();
+        $notice = new Review_Notice(
+            'koko-analytics',
+            'koko_analytics_settings',
+            fn (): array => [
+                /* translators: %s is the plugin name. */
+                'heading'      => sprintf(__('Enjoying %s?', 'koko-analytics'), 'Koko Analytics'),
+                'body'         => __('A quick review on WordPress.org helps more people find the plugin and helps us keep maintaining it for the long term.', 'koko-analytics'),
+                'review_link'  => __('Review the plugin on WordPress.org', 'koko-analytics'),
+                'dismiss_link' => __('Don\'t show this again', 'koko-analytics'),
+            ],
+            'notice_pro',
+            'manage_koko_analytics'
+        );
+        $notice->maybe_show();
     }
 
     public function get_dates_for_range(\DateTimeImmutable $now, string $key, int $week_starts_on = 0): array
@@ -261,14 +275,27 @@ class Dashboard
     {
         if ($offset >= $limit || $offset + $limit < $count) {
             ?>
-            <div class='ka-pagination'>
-                <?php if ($offset >= $limit) { ?>
-                    <a class='ka-pagination--prev' href="<?php echo esc_attr(add_query_arg(['p' => null, $key => $offset >= $limit * 2 ? ['offset' => $offset - $limit, 'limit' => $limit] : null ])); ?>" rel="nofollow"><?php esc_html_e('Previous', 'koko-analytics'); ?></a>
-                <?php } ?>
-                <?php if ($offset + $limit < $count) { ?>
-                    <a class='ka-pagination--next' href="<?php echo esc_attr(add_query_arg(['p' => null, $key => ['offset' => $offset + $limit, 'limit' => $limit]])); ?>" rel="nofollow"><?php esc_html_e('Next', 'koko-analytics'); ?></a>
-                <?php } ?>
-            </div>
+        <div class="ka-pagination2">
+            <span class="ka-pagination2-muted">
+                <?php
+                /* translators: 1: first result number, 2: last result number, 3: total number of results. */
+                printf(esc_html__('%1$d – %2$d of %3$d', 'koko-analytics'), (int) $offset + 1, (int) min($count, $offset + $limit), (int) $count);
+                ?>
+            </span>
+            <span>
+                <?php if ($offset >= $limit) : ?>
+                    <a  href="<?php echo esc_attr(add_query_arg(['p' => null, $key => $offset >= $limit * 2 ? ['offset' => $offset - $limit, 'limit' => $limit] : null ])); ?>" rel="nofollow">← <?php esc_html_e('Previous', 'koko-analytics'); ?></a>
+                <?php else : ?>
+                    <span class="ka-pagination2-muted">← <?php esc_html_e('Previous', 'koko-analytics'); ?></span>
+                <?php endif; ?>
+                <span> · </span>
+                <?php if ($offset + $limit < $count) : ?>
+                <a  href="<?php echo esc_attr(add_query_arg(['p' => null, $key => ['offset' => $offset + $limit, 'limit' => $limit]])); ?>" rel="nofollow"><?php esc_html_e('Next', 'koko-analytics'); ?> →</a>
+                <?php else : ?>
+                    <span class="ka-pagination2-muted"><?php esc_html_e('Next', 'koko-analytics'); ?> →</span>
+                <?php endif; ?>
+            </span>
+        </div>
             <?php
         }
     }
@@ -290,6 +317,12 @@ class Dashboard
             $sum   = $stats->sum_posts($date_start, $date_end);
         }
         ?>
+        <div class="ka-card-head">
+            <div>
+                <div class="ka-card-head-title"><?php esc_html_e('Top pages', 'koko-analytics'); ?></div>
+                <div class="ka-card-head-desc"><?php esc_html_e('Most viewed content this period', 'koko-analytics'); ?></div>
+            </div>
+        </div>
         <table class="ka-table">
             <thead>
                 <tr>
@@ -340,6 +373,12 @@ class Dashboard
             $sum   = $stats->sum_referrers($date_start, $date_end);
         }
         ?>
+        <div class="ka-card-head">
+            <div>
+                <div class="ka-card-head-title"><?php esc_html_e('Top referrers', 'koko-analytics'); ?></div>
+                <div class="ka-card-head-desc"><?php esc_html_e('Where your visitors came from', 'koko-analytics'); ?></div>
+            </div>
+        </div>
         <table class="ka-table">
             <thead>
                 <tr>

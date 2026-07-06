@@ -114,15 +114,15 @@ $tab = 'dashboard';
         $change = $totals_previous->visitors == 0 ? 0 : ($totals->visitors / $totals_previous->visitors) - 1;
         ?>
         <div class="ka-col">
-            <div class="ka-box p-3">
-                <div class="text-muted mb-1"><?php esc_html_e('Total visitors', 'koko-analytics'); ?></div>
-                <div class="ka-totals-number mb-1">
-                    <span title="<?= esc_attr($totals->visitors); ?>"><?= esc_html(number_format_i18n($totals->visitors)); ?></span>
-                    <span class="ka-totals-change <?= ($diff > 0 ? 'text-success' : ($diff < 0 ? 'text-danger' : 'text-muted')); ?>">
-                        <?= esc_html(Fmt::percent($change)); ?>
-                    </span>
+            <div class="ka-card ka-kpi">
+                <div class="ka-kpi-top">
+                    <div class="ka-kpi-label"><?php esc_html_e('Visitors', 'koko-analytics'); ?></div>
+                    <div class="ka-kpi-delta <?= ($diff > 0 ? 'up' : ($diff < 0 ? 'down' : 'neutral')); ?>"><?= esc_html(Fmt::percent($change)); ?></div>
                 </div>
-                <div class="text-muted">
+                <div class="ka-kpi-value" title="<?= esc_attr($totals->visitors); ?>">
+                    <?= esc_html(number_format_i18n($totals->visitors)); ?>
+                </div>
+                <div class="ka-kpi-cap">
                     <?php
                     if ($diff != 0) {
                         echo esc_html(number_format_i18n(abs($diff)));
@@ -144,15 +144,15 @@ $tab = 'dashboard';
         $change = $totals_previous->pageviews == 0 ? 0 : ($totals->pageviews / $totals_previous->pageviews) - 1;
         ?>
         <div class="ka-col">
-            <div class="ka-box p-3">
-                <div class="text-muted mb-1"><?php esc_html_e('Total pageviews', 'koko-analytics'); ?></div>
-                <div class="ka-totals-number mb-1">
-                    <span title="<?= esc_attr($totals->pageviews); ?>"><?= esc_html(number_format_i18n($totals->pageviews)); ?></span>
-                    <span class="ka-totals-change <?= ($diff > 0 ? 'text-success' : ($diff < 0 ? 'text-danger' : 'text-muted')); ?>">
-                        <?= esc_html(Fmt::percent($change)); ?>
-                    </span>
+            <div class="ka-card ka-kpi">
+                <div class="ka-kpi-top">
+                    <div class="ka-kpi-label"><?php esc_html_e('Pageviews', 'koko-analytics'); ?></div>
+                    <div class="ka-kpi-delta <?= ($diff > 0 ? 'up' : ($diff < 0 ? 'down' : 'neutral')); ?>"><?= esc_html(Fmt::percent($change)); ?></div>
                 </div>
-                <div class="text-muted">
+                <div class="ka-kpi-value" title="<?= esc_attr($totals->pageviews); ?>">
+                    <?= esc_html(number_format_i18n($totals->pageviews)); ?>
+                </div>
+                <div class="ka-kpi-cap">
                     <?php
                     if ($diff != 0) {
                         echo esc_html(number_format_i18n(abs($diff)));
@@ -169,10 +169,13 @@ $tab = 'dashboard';
             </div>
         </div>
         <div class="ka-col">
-            <div class="ka-box p-3" id="ka-realtime">
-                <div class="text-muted mb-1"><span class="ka-realtime-dot"></span><?php esc_html_e('Realtime pageviews', 'koko-analytics'); ?></div>
-                <div class="ka-totals-number mb-1"><?= esc_html(number_format_i18n($realtime)); ?></div>
-                <div class="text-muted">
+            <div class="ka-card ka-kpi <?= $page !== 0 ? 'page-filter-active' : ''; ?>" id="ka-realtime">
+                <div class="ka-kpi-top">
+                    <div class="ka-kpi-label"><?php esc_html_e('Realtime', 'koko-analytics'); ?></div>
+                    <div class="ka-kpi-live"><span class="ka-realtime-dot"></span> <?php esc_html_e('Live', 'koko-analytics'); ?></div>
+                </div>
+                <div class="ka-kpi-value"><?= esc_html(number_format_i18n($realtime)); ?></div>
+                <div class="ka-kpi-cap">
                     <?php esc_html_e('pageviews in the last hour', 'koko-analytics'); ?>
                 </div>
             </div>
@@ -182,7 +185,7 @@ $tab = 'dashboard';
 
     <?php /* CHART COMPONENT */ ?>
     <?php if (count($chart_data) > 1) { ?>
-        <div class="ka-box mb-3 p-3">
+        <div class="ka-card mb-3">
             <?php new Chart_View($chart_data, $date_start, $date_end, 280, true, $group_chart_by); ?>
         </div>
     <?php } ?>
@@ -191,7 +194,7 @@ $tab = 'dashboard';
     <div id="ka-components" class="ka-row ka-row-cols-1 ka-row-cols-xl-2 g-3 mb-3 <?= $page !== 0 ? 'page-filter-active' : ''; ?>" <?= $can_sort ? 'data-nonce="' . esc_attr(wp_create_nonce('koko_analytics_save_component_order')) . '"' : ''; ?>>
         <?php foreach ($this->get_components() as $id => $callback) : ?>
             <div id="<?= esc_attr($id); ?>" class="ka-col" <?= $can_sort ? 'data-sortable' : ''; ?>>
-                <div class="ka-box">
+                <div class="ka-card">
                     <?php $callback($date_start, $date_end); ?>
                 </div>
             </div>
@@ -207,21 +210,9 @@ $tab = 'dashboard';
     <?php // show section about koko analytics pro unless on pro version already ?>
     <?php if (!defined('KOKO_ANALYTICS_PRO_VERSION')) : ?>
         <?php if (current_user_can('manage_koko_analytics')) : ?>
-            <div class="p-3 rounded" style="background: #f5f8ff;">
-                <h2 class="mt-0 mb-2"><?php esc_html_e('Unlock more insights with Koko Analytics Pro', 'koko-analytics'); ?></h2>
-                <p class="mt-0 mb-2">
-                    <?php esc_html_e('Koko Analytics Pro adds country and device statistics, UTM tracking, custom event tracking and scheduled email reports. All while preserving privacy and not using any third-party services.', 'koko-analytics'); ?>
-                </p>
-                <p class="mt-0 mb-0">
-                    <a class="btn btn-sm btn-primary" href="https://www.kokoanalytics.com/pricing/?utm_source=koko-analytics&utm_medium=link&utm_campaign=free-plugin-dashboard-upgrade" rel="noopener noreferrer">
-                        <?php esc_html_e('View pricing', 'koko-analytics'); ?> 
-                    </a>
-                    <span>&nbsp;</span>
-                    <a href="https://www.kokoanalytics.com/features/?utm_source=koko-analytics&utm_medium=link&utm_campaign=free-plugin-dashboard-upgrade#pro" rel="noopener noreferrer"><?php esc_html_e('Learn more about Pro', 'koko-analytics'); ?></a>
-                </p>
-            </div>
+            <?php require __DIR__ . '/upsell.php'; ?>
         <?php else : ?>
-            <div class="text-muted text-center mt-5 mb-3">
+            <div class="text-muted text-center mt-3">
                 <?php /* translators: %1s: opening anchor tag for Koko Analytics website. */ ?>
                 <?php echo wp_kses(sprintf(__('Powered by %1s - privacy-friendly analytics for WordPress sites', 'koko-analytics'), '<a href="https://www.kokoanalytics.com/#utm_source=koko-analytics&amp;utm_medium=link&amp;utm_campaign=free-plugin-dashboard-powered-by">Koko Analytics</a>'), ['a' => ['href' => []]]); ?>
             </div>
