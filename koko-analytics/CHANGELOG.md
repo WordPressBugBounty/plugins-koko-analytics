@@ -1,5 +1,11 @@
 # Changelog
 
+= 2.5.1 =
+
+- tracking: more aggressive bot filter lists.
+- dashboard: add new Koko Analytics logo and brand colors.
+
+
 = 2.5.0 =
 
 - import: add importers for Burst Statistics, Statify, WP Statistics, Independent Analytics, and SlimStat Analytics.

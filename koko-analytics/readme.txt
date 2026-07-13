@@ -3,38 +3,40 @@ Contributors: Ibericode, DvanKooten, kokoanalytics
 Tags: analytics, google analytics, privacy, statistics, website statistics
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.5.0
+Stable tag: 2.5.1
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
 
-WordPress analytics without cookies or third-party tracking. A fast, privacy-friendly Google Analytics alternative
+Pivacy-friendly and lightweight Google Analytics alternative for WordPress sites. No cookies, just insights.
 
 == Description ==
 
-Koko Analytics gives you WordPress analytics inside your dashboard without sending visitor data to an external service. See your pageviews, visitors, top pages, and referrers while keeping analytics data on your own server.
-
-It is built for privacy from the start. Koko Analytics can be used without cookies and does not process or store personal data. That makes it suitable for GDPR, CCPA, and PECR-friendly website statistics.
-
-It is also built for speed. Koko Analytics adds less than 1 KB to your HTML, works with cached pages, and bypasses WordPress for its optimized collection endpoint.
+Koko Analytics is a privacy-friendly and lightweight Google Analytics alternative for WordPress sites. 
 
 == Why choose Koko Analytics? ==
 
+= Important insights =
+
+Koko Analytics provides you with [simple and effective analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). 
+There are no complicated reports to dig through. All the important metrics are visible from a quick glance at your analytics dashboard.
+
 = Privacy-friendly analytics =
 
-Koko Analytics is [privacy-friendly analytics](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) for WordPress. No personal data is processed or stored, all measurements are anonymous, and nothing is shared with a third-party analytics platform.
+Koko Analytics is a [privacy-friendly analytics](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) solution for WordPress. 
+No personal data is processed or stored and nothing is shared with any third-party.
+That makes it suitable for GDPR, CCPA, and PECR-compliant website statistics.
 
 = Lightweight website statistics =
 
-Koko Analytics is [lightweight analytics](https://www.kokoanalytics.com/lightweight-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). It adds less than 1 kilobyte of data to your HTML and is fully compatible with pages served from any kind of cache. WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
-
-= A simple analytics dashboard =
-
-Koko Analytics is [simple analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). There are no complicated reports to dig through. One dashboard page shows your important website statistics.
+Koko Analytics is [lightweight analytics](https://www.kokoanalytics.com/lightweight-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). 
+It adds less than 1 kilobyte of data to your pages and is fully compatible with all kinds of caching setups.
+WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
 
 = Open source analytics =
 
-Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-source-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) released under the GPL license, just like WordPress itself. It is built in the open, so anyone can verify how it works. No company can lock you in or take your analytics data away.
+Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-source-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) released under the GPL license, just like WordPress itself. 
+The source code is publicly available. Everyone has the right to run, study, share or modify the source code. 
 
 == Features ==
 
@@ -122,6 +124,12 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 
 == Changelog ==
 
+= 2.5.1 =
+
+- tracking: more aggressive bot filter lists.
+- dashboard: add new Koko Analytics logo and brand colors.
+
+
 = 2.5.0 =
 
 - import: add importers for Burst Statistics, Statify, WP Statistics, Independent Analytics, and SlimStat Analytics.
@@ -160,18 +168,5 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 - dashboard: fix saving component order when the page contains non-sortable dashboard columns.
 - dashboard: keep an explicit group parameter when switching chart grouping back to days.
 - docs: add campaign parameters to in-plugin links to Koko Analytics documentation and Pro pages.
-
-
-= 2.3.6 =
-
-- dashboard: group top pages by post ID when available, so changing a post slug no longer splits its analytics in the dashboard.
-- dashboard: resolve titles and permalinks dynamically for posts and pages in the top pages list.
-- dashboard: page-specific totals and charts now use post ID filters when available.
-- tracking: ignore query parameters when pretty permalinks are enabled.
-- tracking: ensure normalized paths always start with a leading slash.
-- data export: improve export reliability by casting numeric values and handling missing tables defensively.
-- settings: show database usage and table sizes on the data settings page.
-- settings: add current and latest database migration version to debug info.
-- release: exclude development-only files from the WordPress.org package.
 
 [View the full changelog on GitHub](https://github.com/ibericode/koko-analytics/blob/main/CHANGELOG.md)

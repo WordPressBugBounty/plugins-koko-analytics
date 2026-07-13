@@ -15,12 +15,13 @@ defined('ABSPATH') || exit; ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer-when-downgrade">
     <title>Koko Analytics</title>
-    <meta name="theme-color" content="#B60205">
+    <meta name="theme-color" content="#021630">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Koko Analytics">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="apple-touch-icon" href="<?= esc_url(plugins_url('assets/img/apple-touch-icon.png', KOKO_ANALYTICS_PLUGIN_FILE)); ?>">
+    <link rel="apple-touch-icon" href="<?= esc_url(plugins_url('assets/img/icon-180x180.png', KOKO_ANALYTICS_PLUGIN_FILE)); ?>">
     <link rel="manifest" href="<?= esc_url(plugins_url('assets/manifest.json', KOKO_ANALYTICS_PLUGIN_FILE)); ?>">
+    <link rel="shortcut icon" href="<?= esc_url(plugins_url('assets/img/icon.svg', KOKO_ANALYTICS_PLUGIN_FILE)); ?>" type="image/svg+xml">
     <link rel="shortcut icon" href="<?= esc_url(plugins_url('assets/img/favicon.ico', KOKO_ANALYTICS_PLUGIN_FILE)); ?>">
     <meta name="robots" content="nofollow, noindex">
 </head>
