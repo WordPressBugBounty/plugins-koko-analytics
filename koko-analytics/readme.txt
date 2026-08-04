@@ -3,7 +3,7 @@ Contributors: Ibericode, DvanKooten, kokoanalytics
 Tags: analytics, google analytics, privacy, statistics, website statistics
 Requires at least: 6.2
 Tested up to: 7.0
-Stable tag: 2.5.1
+Stable tag: 2.5.2
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Requires PHP: 7.4
@@ -12,31 +12,25 @@ Pivacy-friendly and lightweight Google Analytics alternative for WordPress sites
 
 == Description ==
 
-Koko Analytics is a privacy-friendly and lightweight Google Analytics alternative for WordPress sites. 
+Koko Analytics is a privacy-friendly and lightweight Google Analytics alternative for WordPress sites. It is a plug and play solution to get GDPR compliant insights into your website visitors without requiring any third-party services.
 
 == Why choose Koko Analytics? ==
 
 = Important insights =
 
-Koko Analytics provides you with [simple and effective analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). 
-There are no complicated reports to dig through. All the important metrics are visible from a quick glance at your analytics dashboard.
+Koko Analytics provides you with [simple and effective analytics](https://www.kokoanalytics.com/simple-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). There are no complicated reports to dig through. All the important metrics are visible from a quick glance at your analytics dashboard, right inside your WordPress admin.
 
 = Privacy-friendly analytics =
 
-Koko Analytics is a [privacy-friendly analytics](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) solution for WordPress. 
-No personal data is processed or stored and nothing is shared with any third-party.
-That makes it suitable for GDPR, CCPA, and PECR-compliant website statistics.
+Koko Analytics is a [privacy-friendly](https://www.kokoanalytics.com/privacy-focused-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) solution for WordPress. It can be used without any cookies, no personal data is processed or stored and nothing is shared with any third-party. That makes it suitable for GDPR, CCPA, and PECR-compliant website statistics.
 
 = Lightweight website statistics =
 
-Koko Analytics is [lightweight analytics](https://www.kokoanalytics.com/lightweight-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). 
-It adds less than 1 kilobyte of data to your pages and is fully compatible with all kinds of caching setups.
-WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
+Koko Analytics is [lightweight](https://www.kokoanalytics.com/lightweight-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin). It adds less than 1 kilobyte of data to your pages and is fully compatible with all kinds of caching setups. WordPress is bypassed entirely for its collection endpoint, making the impact on your site's performance as close to zero as possible.
 
 = Open source analytics =
 
-Koko Analytics is [open source analytics](https://www.kokoanalytics.com/open-source-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) released under the GPL license, just like WordPress itself. 
-The source code is publicly available. Everyone has the right to run, study, share or modify the source code. 
+Koko Analytics is [open source](https://www.kokoanalytics.com/open-source-wordpress-analytics/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) released under the GPL license, just like WordPress itself. The source code is publicly available. Everyone has the right to run, study, share or modify the source code. 
 
 == Features ==
 
@@ -46,7 +40,7 @@ The source code is publicly available. Everyone has the right to run, study, sha
 * **Path-based tracking** - Track statistics for any URL, including archives and search pages.
 * **Returning visitor detection** - Reliably detect returning visitors without cookies.
 * **Exclusion rules** - Exclude visits from selected WordPress user roles or IP addresses.
-* **Historical data imports** - Import statistics from Jetpack Stats, Plausible, or Burst Statistics.
+* **Historical data imports** - Import statistics from Jetpack Stats, Plausible Analytics, Burst Statistics, Statify, WP Statistics, Independent Analytics, or SlimStat Analytics.
 * **Automatic data cleanup** - Remove historical data older than a chosen number of months or years.
 * **Popular posts output** - Show your most visited posts or pages with a widget, Gutenberg block, or shortcode.
 * **Pageview counter** - Show the total number of pageviews for a page with a shortcode or Gutenberg block.
@@ -57,8 +51,9 @@ Koko Analytics Pro adds more reporting options for sites that need deeper analyt
 
 * **Country statistics** - See which countries your visitors come from.
 * **Technology reports** - View browser, operating system, and device statistics.
-* **Custom event tracking** - Track outbound link clicks, contact form submissions, add-to-cart actions, and more.
 * **Email reports** - Receive periodic analytics reports in your inbox.
+* **UTM Campaigns** - Measure the performance of your marketing campaigns.
+* **Custom event tracking** - Track outbound link clicks, contact form submissions, add-to-cart actions, and more.
 * **Traffic spike alerts** - Get notified by email when traffic changes quickly.
 
 [View the Koko Analytics live demo](https://www.kokoanalytics.com/koko-analytics-dashboard/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin) or [see Koko Analytics Pro pricing](https://www.kokoanalytics.com/pricing/#utm_source=wordpress.org&utm_medium=link&utm_campaign=free-plugin).
@@ -98,6 +93,10 @@ Yes. Koko Analytics is open source analytics released under the GPL license, jus
 
 No account is needed. Koko Analytics runs on your own WordPress site, and statistics start recording after activation.
 
+= Can I import my statistics from another analytics plugin? =
+
+Yes. Koko Analytics ships with built-in importers for Jetpack Stats, Plausible Analytics, Burst Statistics, Statify, WP Statistics, Independent Analytics, and SlimStat Analytics, so you keep your historical pageviews, visitors, and referrers when you switch. You will find them under Settings > Koko Analytics > Data.
+
 = Does Koko Analytics work with cached pages? =
 
 Yes. Koko Analytics is compatible with pages served from many types of cache.
@@ -123,6 +122,13 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 9. Country, browser, operating system, and device statistics for deeper website analytics. [Pro]
 
 == Changelog ==
+
+= 2.5.2 =
+
+- tracking: fall back to fetch() in browsers without support for navigator.sendBeacon.
+- security: stricter validation of pageview and event data, rejecting control characters that could corrupt the buffer file.
+- data: increase the aggregation interval to 65 seconds to reduce the frequency of scheduling conflicts.
+- ux: show admin notice with location of analytics dashboard after initial plugin activation.
 
 = 2.5.1 =
 
@@ -155,18 +161,5 @@ If your question is not listed here, read the [Koko Analytics documentation](htt
 - import: fix column names for the referrer stats table.
 - rest: clamp date range for unauthenticated users to prevent large table scans.
 - review notice: simplify the review notice to one primary action.
-
-
-= 2.3.7 =
-
-- tracking: include UTM parameters in pageview tracking requests so integrations can access campaign data.
-- endpoint: harden pageview and event request validation by checking required parameters and accepted types.
-- endpoint: unslash request data when running inside WordPress.
-- endpoint: use exact buffer filename matching when finding existing buffer files.
-- endpoint: use file locking when writing to buffer and session files.
-- endpoint: handle missing upload or sessions directories more defensively.
-- dashboard: fix saving component order when the page contains non-sortable dashboard columns.
-- dashboard: keep an explicit group parameter when switching chart grouping back to days.
-- docs: add campaign parameters to in-plugin links to Koko Analytics documentation and Pro pages.
 
 [View the full changelog on GitHub](https://github.com/ibericode/koko-analytics/blob/main/CHANGELOG.md)
